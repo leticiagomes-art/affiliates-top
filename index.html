@@ -136,7 +136,7 @@
 
   /* filtros */
   .toolbar{display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:10px 0; border-bottom:1px solid var(--line); margin-bottom:0;}
-  .toolbar .search{display:flex; align-items:center; gap:7px; height:28px; border:1px solid var(--line); border-radius:7px; padding:0 9px; color:var(--muted); flex:1; min-width:200px; max-width:320px; background:var(--bg);}
+  .toolbar .search{display:flex; align-items:center; gap:7px; height:28px; border:1px solid var(--line); border-radius:7px; padding:0 9px; color:var(--muted); flex:0 1 240px; min-width:160px; background:var(--bg);}
   .toolbar .search:focus-within{border-color:var(--line-strong);}
   .toolbar input[type=text]{border:0; outline:0; background:none; color:var(--ink); font:inherit; font-size:13px; width:100%; padding:0;}
   .toolbar select{height:28px; padding:0 26px 0 9px; border:1px solid var(--line-strong); border-radius:7px; font:inherit; font-size:12.5px; font-weight:500; background:var(--bg); color:var(--text-2); cursor:pointer; appearance:none;
@@ -144,10 +144,32 @@
   .toolbar select:hover{background-color:var(--bg-hover); color:var(--ink);}
   .toolbar button{height:28px; padding:0 10px; border-radius:7px; font-weight:500; font-size:12.5px; cursor:pointer;}
   .legend{display:none;}
+  .nav-item .ico{width:15px; height:15px; display:grid; place-items:center; color:var(--text-2); flex:0 0 15px;}
+  .nav-item.active .ico{color:var(--ink);}
+  .views{display:flex; gap:2px; border-bottom:1px solid var(--line); position:sticky; top:52px; background:var(--bg); z-index:4; overflow-x:auto; overflow-y:hidden; scrollbar-width:none;}
+  .views::-webkit-scrollbar{display:none;}
+  .views .view{border:0; background:none; padding:9px 10px 10px; color:var(--text-2); font:inherit; font-weight:500; font-size:13px; display:flex; gap:6px; align-items:center; cursor:pointer; white-space:nowrap;}
+  .views .view:hover{color:var(--ink);}
+  .views .view.on{color:var(--ink); box-shadow:inset 0 -2px 0 var(--ink);}
+  .views .view .ct{font-size:11.5px; color:var(--muted); background:var(--bg-hover); border-radius:5px; padding:0 5px; font-variant-numeric:tabular-nums;}
+  .toolbar .sp{flex:1;}
+  .toolbar select.chip-select{border-style:dashed; background-color:transparent; color:var(--text-2); field-sizing:content; min-width:0;}
+  .toolbar select.chip-select.is-set{border-style:solid; background-color:var(--bg-sub); color:var(--ink);}
+  .stat-chip .d{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; font-size:12px; color:var(--muted); min-height:20px;}
+  .up{color:var(--green);} .down{color:var(--red);}
+  td.money b{display:block; font-weight:550;}
+  td.money .row-sub{display:block;}
+  td.money br{display:none;}
+  .cis{display:flex; gap:4px;}
+  .ci{width:24px; height:24px; border-radius:6px; display:grid; place-items:center; border:1px solid var(--line); color:var(--muted); opacity:.4;}
+  .ci.on{opacity:1; text-decoration:none;}
+  .ci.on.wa{color:var(--wa-fg);} .ci.on.tg{color:var(--tg-fg);}
+  .ci.on:hover{background:var(--bg-hover);}
 
   /* tabela */
   table{width:100%; border-collapse:separate; border-spacing:0; background:var(--bg);}
-  thead th{background:var(--bg); color:var(--muted); text-align:left; padding:9px 12px; font-size:12px; font-weight:500; border-bottom:1px solid var(--line); white-space:nowrap; position:sticky; top:52px; z-index:2;}
+  thead th{background:var(--bg); color:var(--muted); text-align:left; padding:9px 12px; font-size:12px; font-weight:500; border-bottom:1px solid var(--line); white-space:nowrap; position:sticky; top:93px; z-index:2;}
+  thead th.r{text-align:right;}
   tbody td{padding:10px 12px; font-size:13px; border-bottom:1px solid var(--line); vertical-align:middle;}
   tbody tr:nth-child(even){background:transparent;}
   tbody tr.aff-row{cursor:pointer; transition:background .08s;}
@@ -345,12 +367,12 @@
   </div>
   <div class="side-search" id="sideSearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Buscar afiliado<kbd>Ctrl K</kbd></div>
   <div class="nav-section">
-    <div class="nav-heading">Urgência</div>
     <div class="nav-item active" data-tier="">
-      <span class="dot" style="background:var(--muted)"></span>
-      <span class="label">Todos os afiliados</span>
+      <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <span class="label">Afiliados</span>
       <span class="count" id="countTodos">–</span>
     </div>
+    <div class="nav-heading">Urgência</div>
     <div class="nav-item" data-tier="novo">
       <span class="dot" style="background:var(--novo)"></span>
       <span class="label">Novos</span>
@@ -389,8 +411,12 @@
   </div>
   <div class="nav-section">
     <div class="nav-heading">Outras visões</div>
+    <div class="nav-item" id="navTopParados">
+      <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c4.4 0 7-2.9 7-6.5 0-4-3.5-6.5-4.5-10.5-2 2-3 4-3 6-1.5-1-2.5-2.5-2.5-4.5C6 9 5 11.5 5 15.5 5 19.1 7.6 22 12 22z"/></svg></span>
+      <span class="label">Top parados</span>
+    </div>
     <div class="nav-item" id="navVendasDia">
-      <span class="dot" style="background:var(--blue)"></span>
+      <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/></svg></span>
       <span class="label">Vendas por dia</span>
     </div>
   </div>
@@ -421,16 +447,16 @@
   </div>
   <div id="headerStats"></div>
 
-  <div class="period-tabs" id="mainViewTabs">
+  <div class="period-tabs" id="mainViewTabs" style="display:none">
     <button class="active" data-view="tabela">Geral</button>
     <button data-view="topparados">Top parados em faturamento</button>
   </div>
 
   <div id="viewTabela">
 
+  <div class="views" id="viewTabs"></div>
   <div class="toolbar">
-    <label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="searchBox" placeholder="Buscar por nome ou produto"></label>
-    <select id="tierFilter">
+    <select id="tierFilter" style="display:none">
       <option value="">Todas as urgências</option>
       <option value="novo">Novos</option>
       <option value="ativo">Ativo (0-2d)</option>
@@ -439,30 +465,32 @@
       <option value="sumido">Sumido (16d+)</option>
       <option value="sem_venda_2026">Sem venda confirmada em 2026</option>
     </select>
-    <select id="contactFilter">
-      <option value="">Com ou sem contato</option>
-      <option value="com">Só com contato</option>
-      <option value="sem">Só sem contato</option>
+    <select id="contactFilter" class="chip-select">
+      <option value="">+ Contato</option>
+      <option value="com">Com contato</option>
+      <option value="sem">Sem contato</option>
     </select>
-    <select id="ontemFilter">
-      <option value="">Ontem: todos</option>
+    <select id="ontemFilter" class="chip-select">
+      <option value="">+ Ontem</option>
       <option value="sim">Vendeu ontem</option>
       <option value="nao">Não vendeu ontem</option>
     </select>
-    <select id="semanaFilter">
-      <option value="">Esta semana: todos</option>
+    <select id="semanaFilter" class="chip-select">
+      <option value="">+ Esta semana</option>
       <option value="sim">Vendeu esta semana</option>
       <option value="nao">Não vendeu esta semana</option>
     </select>
-    <select id="sortFilter">
-      <option value="">Ordem padrão</option>
-      <option value="dias_desc">Dias sem vender (mais dias primeiro)</option>
-      <option value="faturamento_desc">Faturamento do mês (maior primeiro)</option>
-      <option value="streak_desc">Sequência diária (mais dias seguidos primeiro)</option>
+    <select id="sortFilter" class="chip-select">
+      <option value="">Ordenar</option>
+      <option value="dias_desc">Mais dias parado</option>
+      <option value="faturamento_desc">Maior faturamento</option>
+      <option value="streak_desc">Maior sequência</option>
     </select>
-    <select id="monthFilter">
+    <select id="monthFilter" class="chip-select is-set">
       <option value="">Faturamento: sem dados importados ainda</option>
     </select>
+    <span class="sp"></span>
+    <label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="searchBox" placeholder="Buscar por nome ou produto"></label>
     <button class="btn-ghost" id="copySheetsBtn">Copiar p/ Sheets</button>
   </div>
 
@@ -481,11 +509,13 @@
   <table>
     <thead>
       <tr>
-        <th style="width:26%">Afiliado</th>
-        <th style="width:13%">Status</th>
+        <th style="width:24%">Afiliado</th>
+        <th style="width:11%">Status</th>
         <th class="hide-sm" style="width:17%">Produtos</th>
-        <th style="width:15%" id="thFaturamento">Faturamento do mês</th>
-        <th style="width:17%">Contato</th>
+        <th class="r" style="width:13%" id="thFaturamento">Faturamento do mês</th>
+        <th class="r" style="width:8%">Parado há</th>
+        <th style="width:8%">Contato</th>
+        <th class="hide-sm" style="width:11%">Último contato</th>
         <th></th>
       </tr>
     </thead>
@@ -1069,6 +1099,7 @@ document.querySelectorAll('.nav-item[data-tier]').forEach(item => {
     document.getElementById('tierFilter').value = item.dataset.tier;
     semContatoAtivo = false;
     if(document.getElementById('contactFilter').value === 'sem') document.getElementById('contactFilter').value = '';
+    voltarTabela_();
     showView_('afiliados');
     applyFilters();
   });
@@ -1077,6 +1108,7 @@ document.getElementById('navSemContato').addEventListener('click', () => {
   document.getElementById('tierFilter').value = '';
   document.getElementById('contactFilter').value = 'sem';
   semContatoAtivo = true;
+  voltarTabela_();
   showView_('afiliados');
   applyFilters();
 });
@@ -1109,15 +1141,22 @@ function buildScript(entry){
 }
 
 function renderStats(list){
-  const total = list.length;
-  const comContato = list.filter(e => e.telefone || e.telegram).length;
-  const confirmados = list.filter(e => e.confirmado).length;
-  const volume = list.reduce((s,e) => s + (e.volume_total||0), 0);
+  const hojeMk = new Date().toISOString().slice(0,7);
+  const [y,m] = hojeMk.split('-').map(Number);
+  const antMk = new Date(y, m-2, 1).toISOString().slice(0,7);
+  const mesesNome = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const antLbl = mesesNome[parseInt(antMk.slice(5,7))-1];
+  const atual = somaMes_(hojeMk), anterior = somaMes_(antMk);
+  const spark = sparkSemanas_();
+  const subindo = spark[7] >= spark[6];
+  const pctContato = DATA.length ? Math.round(DATA.filter(e => e.telefone || e.telegram).length / DATA.length * 100) : 0;
+  const seteDias = new Date(Date.now() - 7*86400000).toISOString().slice(0,10);
+  const praContatar = DATA.filter(e => ['atencao','critico','sumido'].includes(e.tier) && (e.telefone || e.telegram) && !((ultimoContato_(normName(e.nome))||{}).data >= seteDias)).length;
   document.getElementById('headerStats').innerHTML = `
-    <div class="stat-chip"><span>Afiliados nesta visão</span><b>${total}</b></div>
-    <div class="stat-chip"><span>Com contato</span><b>${comContato}</b></div>
-    <div class="stat-chip"><span>Com venda confirmada</span><b>${confirmados}</b></div>
-    <div class="stat-chip"><span>Volume confirmado</span><b>${fmtMoney(volume)}</b></div>`;
+    <div class="stat-chip"><span>Afiliados na base</span><b>${DATA.length}</b><div class="d"><span>${pctContato}% com contato</span></div></div>
+    <div class="stat-chip"><span>Venderam este mês</span><b>${atual.afiliados}</b><div class="d">${deltaTxt_(atual.afiliados, anterior.afiliados, antLbl)}${sparkSvg_(spark, subindo?'var(--green)':'var(--red)')}</div></div>
+    <div class="stat-chip"><span>Faturamento do mês</span><b>${fmtMoney(atual.fat)}</b><div class="d">${deltaTxt_(atual.fat, anterior.fat, antLbl)}${sparkSvg_(spark, subindo?'var(--green)':'var(--red)')}</div></div>
+    <div class="stat-chip"><span>Pra contatar hoje</span><b style="color:var(--accent-text)">${praContatar}</b><div class="d"><span>parados sem contato há 7d+</span></div></div>`;
 }
 
 function contactCell(e){
@@ -1157,12 +1196,12 @@ function updateMonthOptions(){
   const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const prevVal = sel.value;
   if(months.length === 0){
-    sel.innerHTML = '<option value="">Faturamento: sem dados importados ainda</option>';
+    sel.innerHTML = '<option value="">Faturamento: sem dados</option>';
     return;
   }
   sel.innerHTML = months.map(mk => {
     const [y,m] = mk.split('-');
-    return `<option value="${mk}">Faturamento: ${monthNames[parseInt(m)-1]} de ${y}</option>`;
+    return `<option value="${mk}">Faturamento: ${monthNames[parseInt(m)-1].slice(0,3)}/${y.slice(2)}</option>`;
   }).join('');
   sel.value = months.includes(prevVal) ? prevVal : months[0];
 }
@@ -1303,6 +1342,8 @@ function applyFilters(){
   updateNavCounts();
   document.querySelectorAll('.nav-item[data-tier]').forEach(i => i.classList.toggle('active', !semContatoAtivo && i.dataset.tier === tier));
   document.getElementById('navSemContato').classList.toggle('active', semContatoAtivo);
+  renderViewTabs_();
+  document.querySelectorAll('.chip-select').forEach(el => el.classList.toggle('is-set', el.value !== ''));
   const crumb = document.getElementById('crumbView');
   if(crumb) crumb.textContent = semContatoAtivo ? 'Sem contato na base' : (tier ? ({novo:'Novos', ativo:'Ativo', atencao:'Atenção', critico:'Crítico', sumido:'Sumido', sem_venda_2026:'Sem venda em 2026'}[tier] || tier) : 'Todos');
   renderTopParadosCards();
@@ -1322,6 +1363,79 @@ function computeTopParados(){
       && receitaHistorica_(e) > 0 && !isExcludedName(normName(e.nome)))
     .sort((a,b) => receitaHistorica_(b) - receitaHistorica_(a))
     .slice(0, 60);
+}
+function contatoIcones_(e){
+  const wa = e.tel_digits
+    ? `<a class="ci on wa" href="https://wa.me/${e.tel_digits}" target="_blank" rel="noopener" title="WhatsApp ${escapeHtml(e.telefone||'')}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg></a>`
+    : `<span class="ci" title="Sem WhatsApp"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg></span>`;
+  const tg = e.tg_user
+    ? `<a class="ci on tg" href="https://t.me/${e.tg_user}" target="_blank" rel="noopener" title="Telegram @${escapeHtml(e.tg_user)}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.9-.3 1.6.2 1.4 1.3z"/></svg></a>`
+    : `<span class="ci" title="Sem Telegram"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.9-.3 1.6.2 1.4 1.3z"/></svg></span>`;
+  return `<div class="cis">${wa}${tg}</div>`;
+}
+function tempoRelativo_(dataStr){
+  if(!dataStr) return '';
+  const dias = Math.floor((new Date(new Date().toISOString().slice(0,10)) - new Date(String(dataStr).slice(0,10))) / 86400000);
+  if(dias <= 0) return 'hoje';
+  if(dias === 1) return 'ontem';
+  return `há ${dias} dias`;
+}
+function ultimoContatoCell_(e){
+  const u = ultimoContato_(normName(e.nome));
+  if(!u) return '<span class="row-sub">nunca</span>';
+  const quem = u.atendente || '?';
+  return `<div class="who"><span class="av" style="width:20px;height:20px;font-size:9.5px;background:var(--orange)">${escapeHtml(quem[0].toUpperCase())}</span><span class="row-sub" style="font-size:12.5px">${tempoRelativo_(u.data)}</span></div>`;
+}
+const VIEW_TABS_ = [['', 'Todos'], ['novo', 'Novos'], ['ativo', 'Ativo'], ['atencao', 'Atenção'], ['critico', 'Crítico'], ['sumido', 'Sumido'], ['sem_venda_2026', 'Sem venda em 2026'], ['__semcontato', 'Sem contato']];
+function renderViewTabs_(){
+  const el = document.getElementById('viewTabs');
+  if(!el) return;
+  const tier = document.getElementById('tierFilter').value;
+  const cont = k => k === '' ? DATA.length : (k === '__semcontato' ? DATA.filter(e => !(e.telefone||e.telegram)).length : DATA.filter(e => e.tier === k).length);
+  el.innerHTML = VIEW_TABS_.map(([k,l]) => {
+    const on = k === '__semcontato' ? semContatoAtivo : (!semContatoAtivo && tier === k);
+    return `<button class="view ${on?'on':''}" data-vt="${k}">${l}<span class="ct">${cont(k)}</span></button>`;
+  }).join('');
+  el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    if(b.dataset.vt === '__semcontato') document.getElementById('navSemContato').click();
+    else document.querySelector(`.nav-item[data-tier="${b.dataset.vt}"]`).click();
+  }));
+}
+function somaMes_(mk){
+  let vendas = 0, fat = 0, afiliados = 0;
+  DATA.forEach(e => {
+    const daily = e.receita_diaria || {};
+    let v = 0, f = 0;
+    Object.keys(daily).forEach(d => { if(d.slice(0,7) === mk){ v += daily[d].vendas||0; f += daily[d].faturamento||0; } });
+    if(v > 0) afiliados++;
+    vendas += v; fat += f;
+  });
+  return {vendas, fat, afiliados};
+}
+function sparkSemanas_(){
+  // faturamento somado por semana, últimas 8 semanas
+  const pts = new Array(8).fill(0);
+  const hoje = new Date();
+  DATA.forEach(e => {
+    const daily = e.receita_diaria || {};
+    Object.keys(daily).forEach(d => {
+      const dias = Math.floor((hoje - new Date(d)) / 86400000);
+      const w = 7 - Math.floor(dias / 7);
+      if(w >= 0 && w < 8) pts[w] += daily[d].faturamento || 0;
+    });
+  });
+  return pts;
+}
+function sparkSvg_(vals, cor){
+  if(!vals.some(v => v)) return '';
+  const max = Math.max(...vals, 1), min = Math.min(...vals, 0);
+  const pts = vals.map((v,i) => `${(i*64/(vals.length-1)).toFixed(1)},${(18 - (v-min)/(max-min||1)*15).toFixed(1)}`).join(' ');
+  return `<svg width="64" height="20"><polyline fill="none" stroke="${cor}" stroke-width="1.6" points="${pts}"/></svg>`;
+}
+function deltaTxt_(atual, anterior, rotulo){
+  if(!anterior) return `<span>sem venda em ${rotulo}</span>`;
+  const pct = Math.round((atual - anterior) / anterior * 100);
+  return `<span class="${pct>=0?'up':'down'}">${pct>=0?'▲':'▼'} ${Math.abs(pct)}% vs ${rotulo}</span>`;
 }
 const TIER_LABELS_ = {novo:'Novo', ativo:'Ativo', atencao:'Atenção', critico:'Crítico', sumido:'Sumido', sem_venda_2026:'Sem venda'};
 function tierLabel_(t){ return TIER_LABELS_[t] || t; }
@@ -1411,26 +1525,22 @@ function renderTable(){
     const mrev = selectedMonth ? monthlyRevenue_(e, selectedMonth) : null;
     let faturamentoCell;
     if(mrev){
-      faturamentoCell = `<span class="vol">${mrev.aproximado?'≈ ':''}${fmtMoney(mrev.faturamento)}</span><br><span class="row-sub">${mrev.aproximado ? 'aprox. (sem relatório BuyGoods desse mês)' : mrev.vendas+' venda'+(mrev.vendas===1?'':'s')}</span>`;
-    } else if(e.ultima_venda && e.ultima_venda.slice(0,7) === selectedMonth){
-      // sabemos a data da venda (veio da base de contato), mas nenhum relatório diário do
-      // BuyGoods trouxe esse dia ainda pra dar o valor em $ — não é "sem dado no mês", é
-      // "sem confirmação do valor", que é uma coisa diferente de vender em outro mês
-      faturamentoCell = `<span class="row-sub">sem valor confirmado<br>(venda em ${escapeHtml(fmtDate_(e.ultima_venda))} sem relatório BuyGoods desse dia)</span>`;
+      const sub = mrev.aproximado ? 'aproximado' : `${mrev.vendas} venda${mrev.vendas===1?'':'s'}`;
+      faturamentoCell = `<b class="vol">${mrev.aproximado?'≈ ':''}${fmtMoney(mrev.faturamento)}</b><span class="row-sub">${sub}</span>`;
     } else {
-      const vendaMes = e.ultima_venda ? e.ultima_venda.slice(0,7) : null;
-      const foraDoMes = vendaMes && vendaMes !== selectedMonth;
-      faturamentoCell = `<span class="row-sub">sem dado no mês${foraDoMes ? ' (última venda em '+escapeHtml(fmtDate_(e.ultima_venda))+')' : ''}</span>`;
+      faturamentoCell = `<span class="row-sub">—</span>`;
     }
-    const dias = (e.dias_sem_vender!==null && e.dias_sem_vender!==undefined) ? ' · '+e.dias_sem_vender+'d' : '';
+    const temDias = e.dias_sem_vender!==null && e.dias_sem_vender!==undefined;
     const prods = produtosFallback_(e);
     return `
     <tr class="aff-row" data-row="${idx}">
       <td><div class="who"><span class="av" style="background:${avatarColor_(e.nome)}">${initials_(e.nome)}</span><div style="min-width:0"><span class="row-name" data-detail="${idx}">${escapeHtml(e.nome)}</span><span class="row-sub">${e.ultima_venda ? 'última venda '+escapeHtml(fmtDate_(e.ultima_venda)) : 'sem venda registrada'}</span></div></div></td>
-      <td><span class="badge b-${e.tier}"><i></i>${tierLabel_(e.tier)}${dias}</span>${pctBadge_(e)}</td>
+      <td><span class="badge b-${e.tier}"><i></i>${tierLabel_(e.tier)}</span></td>
       <td class="hide-sm">${prods.length ? prods.slice(0,3).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join('') + (prods.length>3 ? `<span class="row-sub">+${prods.length-3}</span>` : '') : '<span class="row-sub">—</span>'}</td>
-      <td>${faturamentoCell}</td>
-      <td>${contactCell(e)}</td>
+      <td class="r money">${faturamentoCell}${pctBadge_(e)}</td>
+      <td class="r num">${temDias ? e.dias_sem_vender+'d' : '<span class="row-sub">—</span>'}</td>
+      <td>${contatoIcones_(e)}</td>
+      <td class="hide-sm">${ultimoContatoCell_(e)}</td>
       <td><div class="actions">
         <button data-script="${rowId}">Script</button>
         <button data-logbtn="${idx}">Registrar</button>
@@ -1538,6 +1648,14 @@ document.querySelectorAll('#mainViewTabs button').forEach(btn => {
   });
 });
 
+document.getElementById('navTopParados').addEventListener('click', () => {
+  showView_('afiliados');
+  document.querySelector('#mainViewTabs button[data-view="topparados"]').click();
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('navTopParados').classList.add('active');
+  document.getElementById('crumbView').textContent = 'Top parados';
+  document.getElementById('viewTabs').style.display = 'none';
+});
 document.getElementById('searchBox').addEventListener('input', applyFilters);
 document.getElementById('tierFilter').addEventListener('change', applyFilters);
 document.getElementById('contactFilter').addEventListener('change', applyFilters);
@@ -2528,6 +2646,11 @@ document.querySelectorAll('#vendasDiaTabs button').forEach(btn => {
 });
 // Alterna entre as 3 grandes seções da tela: lista de afiliados, Vendas por dia, e a visão de
 // canal interno (Helpgrid/Welcome/Gestores) — só uma fica visível por vez.
+function voltarTabela_(){
+  document.querySelector('#mainViewTabs button[data-view="tabela"]').click();
+  document.getElementById('viewTabs').style.display = '';
+  document.getElementById('navTopParados').classList.remove('active');
+}
 function showView_(which){ // 'afiliados' | 'vendasDia' | 'canal'
   document.getElementById('afiliadosSection').style.display = which === 'afiliados' ? '' : 'none';
   document.getElementById('viewVendasDia').style.display = which === 'vendasDia' ? '' : 'none';
@@ -2535,6 +2658,7 @@ function showView_(which){ // 'afiliados' | 'vendasDia' | 'canal'
   document.querySelectorAll('.nav-item[data-tier]').forEach(n => n.classList.toggle('active', which === 'afiliados' && !semContatoAtivo && n.dataset.tier === tier));
   document.getElementById('navSemContato').classList.toggle('active', which === 'afiliados' && semContatoAtivo);
   document.getElementById('navVendasDia').classList.toggle('active', which === 'vendasDia');
+  if(which === 'vendasDia') document.getElementById('navTopParados').classList.remove('active');
   if(which === 'vendasDia') document.getElementById('crumbView').textContent = 'Vendas por dia';
 }
 
