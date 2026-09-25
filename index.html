@@ -1375,7 +1375,7 @@ function renderTopParadosCards(){
     el.addEventListener('click', () => openDetailModal(topParadosList[parseInt(el.dataset.topdetail)]));
   });
   grid.querySelectorAll('[data-toplog]').forEach(btn => {
-    btn.addEventListener('click', () => openContactModal(topParadosList[parseInt(btn.dataset.toplog)]));
+    btn.addEventListener('click', () => abrirRegistroNoPainel_(topParadosList[parseInt(btn.dataset.toplog)]));
   });
   grid.querySelectorAll('[data-topscript]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1468,7 +1468,7 @@ function renderTable(){
   tbody.querySelectorAll('button[data-logbtn]').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.logbtn);
-      openContactModal(currentList[idx]);
+      abrirRegistroNoPainel_(currentList[idx]);
     });
   });
 
@@ -1643,6 +1643,12 @@ async function deleteAffiliate(entry){
 // ---------- Modal: Registrar contato ----------
 const contactModalBg = document.getElementById('contactModalBg');
 let contactModalTarget = null;
+// "Registrar" abre o painel lateral já na aba Contatos, com o cursor no campo de registro
+function abrirRegistroNoPainel_(entry){
+  openDetailModal(entry);
+  setDetailTab_('contatos');
+  setTimeout(() => document.getElementById('dcResumo').focus(), 60);
+}
 function openContactModal(entry){
   contactModalTarget = entry;
   document.getElementById('contactModalName').textContent = 'Afiliado: ' + entry.nome;
