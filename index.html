@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Afiliados Top — Gaby</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fd:'Archivo',system-ui,sans-serif; --fb:'IBM Plex Sans',system-ui,sans-serif; --fm:'IBM Plex Mono',ui-monospace,monospace;
+    --navy:#1F3864; --navy-dark:#152845; --blue:#2F5597; --orange:#F26B1D; --orange-dark:#D9560F;
+    --green:#1E7B34; --green-bg:#E3F5E7; --yellow:#8A6D00; --yellow-bg:#FFF6D9;
+    --red:#B3261E; --red-bg:#FCE8E6; --dark:#5A1E17; --dark-bg:#F0DAD8;
+    --line:#E3E6EC; --ink:#181B22; --muted:#5B6472; --bg:#F4F5F8; --surface:#FFFFFF;
+    --row-even:#FAFBFC; --row-hover:#F0F3F9;
+    --wa-bg:#E4F8EC; --wa-fg:#0F8A3F; --tg-bg:#E5F2FF; --tg-fg:#1477CC; --bg-pill-bg:#F0EBFA; --bg-pill-fg:#5B3FA8;
+    --script-box-bg:#FAFBFC; --script-box-fg:#333;
+    --contact-log-bg:#F0F4FF; --contact-log-fg:#173A66;
+    --alert-bg:var(--yellow-bg); --alert-border:#F0DE9E; --alert-fg:#6b5600;
+    --alert-blue-bg:#E7F0FE; --alert-blue-border:#BBD6F7; --alert-blue-fg:#173A66;
+    --semvenda-bg:#EAECF2; --semvenda-fg:#4A5468; --toast-bg:#181B22; --toast-fg:#fff;
+    --novo:#0891B2; --novo-bg:#E1F4F7;
+  }
+  /* Paleta escura — estrutura em camadas (bg de página != superfície de cartão/tabela != borda),
+     baseada no app do Penpot (github.com/penpot/penpot): #18181A de fundo, #212426 de superfície,
+     acento clareado em vez de invertido puro. Cores da marca Tiger (navy/laranja) mantidas. */
+  :root[data-theme="dark"]{
+    --bg:#18181A; --surface:#212426; --line:#33383D; --ink:#F0F0F2; --muted:#9AA3AF;
+    --orange:#FF7D33; --orange-dark:#F26B1D; --blue:#5B8DEF; --navy:#3D6BB3;
+    --green:#4ADE80; --green-bg:rgba(30,123,52,.22);
+    --yellow:#FFCA3A; --yellow-bg:rgba(138,109,0,.22);
+    --red:#FF6B5B; --red-bg:rgba(179,38,30,.22);
+    --dark:#FFA98A; --dark-bg:rgba(90,30,23,.32);
+    --row-even:rgba(255,255,255,.025); --row-hover:rgba(255,255,255,.05);
+    --wa-bg:rgba(15,138,63,.22); --wa-fg:#4ADE80; --tg-bg:rgba(20,119,204,.22); --tg-fg:#7CC4FF;
+    --bg-pill-bg:rgba(91,63,168,.28); --bg-pill-fg:#C9B6FF;
+    --script-box-bg:rgba(255,255,255,.04); --script-box-fg:var(--ink);
+    --contact-log-bg:rgba(47,85,151,.22); --contact-log-fg:#9CC3FF;
+    --alert-bg:rgba(227,181,5,.14); --alert-border:rgba(240,222,158,.35); --alert-fg:#FFD666;
+    --alert-blue-bg:rgba(47,85,151,.18); --alert-blue-border:rgba(187,214,247,.3); --alert-blue-fg:#BFE0FF;
+    --semvenda-bg:rgba(255,255,255,.08); --semvenda-fg:#B7C0CE; --toast-bg:#F0F0F2; --toast-fg:#181B22;
+    --novo:#4DD4E8; --novo-bg:rgba(8,145,178,.22);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:var(--fb); background:var(--bg); color:var(--ink); font-size:13px; transition:background .15s ease, color .15s ease;}
+  .num{font-family:var(--fm); font-variant-numeric:tabular-nums;}
+  th.r, td.r{text-align:right;}
+  a{color:inherit;}
+  .theme-toggle{display:flex; align-items:center; gap:8px; width:100%; padding:8px 10px; border-radius:5px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.04); color:#C7D0E0; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit;}
+  .theme-toggle:hover{background:rgba(255,255,255,.09);}
+  .theme-toggle .icon{font-size:13px;}
+
+  /* ---------- app shell ---------- */
+  .app{min-height:100vh;}
+  .sidebar{width:238px; background:var(--navy-dark); color:#fff; display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; z-index:10;}
+  .sidebar-brand{padding:18px 20px 16px; border-bottom:1px solid rgba(255,255,255,.12);}
+  .sidebar-brand .word{font-family:var(--fd); font-weight:700; font-size:14px; letter-spacing:.09em; text-transform:uppercase;}
+  .sidebar-brand .stripe{width:26px; height:3px; background:var(--orange); margin-top:9px; border-radius:1px;}
+  .sidebar-brand small{display:block; color:#93A0BD; font-weight:400; font-size:11px; margin-top:9px; line-height:1.5;}
+  .brand-badge{display:inline-flex; align-items:center; gap:5px; margin-top:11px; padding:3px 9px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05); color:#C7D0E0; font-size:10px; font-weight:600; letter-spacing:.03em;}
+  .nav-section{padding:10px 10px 4px;}
+  .nav-heading{font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:#7C88A5; padding:6px 10px 4px; font-weight:700;}
+  .nav-item{display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:5px; color:#C7D0E0; font-size:12px; font-weight:600; cursor:pointer; margin-bottom:1px; border:1px solid transparent; user-select:none;}
+  .nav-item:hover{background:rgba(255,255,255,.06);}
+  .nav-item.active{background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.14);}
+  .nav-item .dot{width:7px; height:7px; border-radius:2px; flex:0 0 7px;}
+  .nav-item .label{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .nav-item .count{font-size:10.5px; font-weight:700; color:#93A0BD; background:rgba(255,255,255,.08); padding:1px 6px; border-radius:4px; min-width:20px; text-align:center;}
+  .nav-item.active .count{color:#fff; background:rgba(255,255,255,.16);}
+  #headerStats{display:flex; flex-direction:column; gap:7px; padding:14px 20px; border-top:1px solid rgba(255,255,255,.12); margin-top:10px;}
+  .stat-chip{background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.14); border-radius:6px; padding:7px 10px; text-align:left; width:100%;}
+  .stat-chip b{display:block; font-family:var(--fm); font-size:16.5px; font-weight:600; font-variant-numeric:tabular-nums;}
+  .stat-chip span{font-size:10px; color:#93A0BD; text-transform:uppercase; letter-spacing:.04em;}
+  .sidebar-sync{padding:2px 20px 18px; display:flex; flex-direction:column; gap:8px;}
+  #syncBadge{display:block; font-size:10.5px; padding:6px 9px; border-radius:5px; font-weight:700; text-align:left;}
+  #syncBadge .dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; vertical-align:middle;}
+
+  .main{margin-left:238px; min-width:0;}
+  .wrap{max-width:1360px; margin:0 auto; padding:22px 26px 60px;}
+  .table-scroll{overflow-x:auto; border-radius:8px;}
+  .alert{background:var(--alert-bg); border:1px solid var(--alert-border); color:var(--alert-fg); border-left:4px solid #E3B505; border-radius:6px; padding:12px 16px; margin:16px 0; font-size:12.5px; line-height:1.55;}
+  .alert.blue{background:var(--alert-blue-bg); border-color:var(--alert-blue-border); color:var(--alert-blue-fg); border-left-color:var(--blue);}
+  .alert b{color:inherit;}
+  h2.section-title{color:var(--ink); font-family:var(--fd); font-size:16.5px; font-weight:700; margin:24px 0 11px; display:flex; align-items:center; gap:8px; letter-spacing:-.005em;}
+  h2.section-title .bar{width:3px; height:14px; background:var(--orange); border-radius:1px; display:inline-block;}
+  .row-name{cursor:pointer;} .row-name:hover{text-decoration:underline; color:var(--navy);}
+  .detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin:10px 0 14px;}
+  .detail-grid label{margin:0 0 4px;}
+  .period-tabs{display:flex; gap:5px; margin:14px 0 10px; flex-wrap:wrap;}
+  .period-tabs button{padding:5px 11px; border-radius:5px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:11.5px; font-weight:600; cursor:pointer;}
+  .period-tabs button.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .chart-summary{font-size:12px; color:var(--muted); margin-bottom:8px;}
+  .chart-summary b{color:var(--ink);}
+  .chart-bars{display:flex; align-items:flex-end; gap:3px; height:110px; border-bottom:1px solid var(--line); padding-bottom:2px;}
+  .chart-bars .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:4px;}
+  .chart-bars .bar{width:100%; background:var(--blue); border-radius:2px 2px 0 0; opacity:.85;}
+  .chart-bars .bar.zero{background:var(--line);}
+  .chart-labels{display:flex; gap:3px; margin-top:4px;}
+  .chart-labels span{flex:1; text-align:center; font-size:9.5px; color:var(--muted); min-width:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .chart-empty{color:var(--muted); font-size:12.5px; padding:20px 0; text-align:center;}
+  .toolbar{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:11px 13px; display:flex; gap:9px; align-items:center; flex-wrap:wrap; margin-bottom:11px;}
+  .toolbar input[type=text]{flex:1; min-width:180px; padding:7px 10px; border:1px solid var(--line); border-radius:5px; font-size:12.5px; background:var(--surface); color:var(--ink);}
+  .toolbar select{padding:7px 8px; border:1px solid var(--line); border-radius:5px; font-size:12px; background:var(--surface); color:var(--ink);}
+  .toolbar button{padding:7px 12px; border-radius:5px; border:none; font-weight:700; font-size:12px; cursor:pointer;}
+  .btn-navy{background:var(--navy); color:#fff;} .btn-navy:hover{background:#16294c;}
+  .btn-orange{background:var(--orange); color:#fff;} .btn-orange:hover{background:var(--orange-dark);}
+  #addAffiliateBtn{border:none; border-radius:999px; padding:9px 18px; font-weight:700; font-size:12.5px; cursor:pointer;}
+  .btn-ghost{background:var(--surface); color:var(--navy); border:1px solid var(--navy) !important;}
+  .legend{display:flex; gap:13px; font-size:11px; color:var(--muted); margin:0 2px 10px; flex-wrap:wrap; align-items:center;}
+  .legend .dot{display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:5px;}
+  .legend .sep{color:var(--line);}
+  table{width:100%; border-collapse:collapse; background:var(--surface); border-radius:8px; overflow:hidden; border:1px solid var(--line);}
+  thead th{background:var(--navy); color:#fff; text-align:left; padding:9px 8px; font-size:10.3px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;}
+  tbody td{padding:9px 8px; font-size:12.3px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  tbody td:first-child{border-left:4px solid transparent;}
+  tbody tr:nth-child(even){background:var(--row-even);}
+  tbody tr:hover{background:var(--row-hover);}
+  .badge{display:inline-block; padding:2.5px 7px; border-radius:4px; font-family:var(--fm); font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .b-novo{background:var(--novo-bg); color:var(--novo);}
+  .b-ativo{background:var(--green-bg); color:var(--green);}
+  .b-atencao{background:var(--yellow-bg); color:var(--yellow);}
+  .b-critico{background:var(--red-bg); color:var(--red);}
+  .b-sumido{background:var(--dark-bg); color:var(--dark);}
+  .b-sem_venda_2026{background:var(--semvenda-bg); color:var(--semvenda-fg);}
+  .conf{font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; margin-left:4px; text-transform:uppercase;}
+  .conf-alta{background:var(--green-bg); color:var(--green);}
+  .conf-media{background:var(--yellow-bg); color:var(--yellow);}
+  .conf-baixa{background:var(--red-bg); color:var(--red);}
+  .contact-links a{display:inline-flex; align-items:center; gap:3px; text-decoration:none; font-size:11.3px; font-weight:600; padding:3px 7px; border-radius:4px; margin:2px 3px 2px 0;}
+  .wa{background:var(--wa-bg); color:var(--wa-fg);} .tg{background:var(--tg-bg); color:var(--tg-fg);}
+  .bg-pill{display:inline-block; font-size:11px; font-weight:600; padding:3px 7px; border-radius:4px; background:var(--bg-pill-bg); color:var(--bg-pill-fg); margin-top:2px;}
+  .no-contact{color:var(--muted); font-size:11px; font-style:italic;}
+  .row-name{font-weight:700; color:var(--ink);}
+  .row-sub{color:var(--muted); font-size:10.5px;}
+  .vol{font-family:var(--fm); font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums;}
+  .actions{display:flex; gap:5px; flex-wrap:wrap;}
+  .actions button{background:none; border:1px solid var(--line); border-radius:5px; padding:4px 8px; font-size:10.8px; cursor:pointer; color:var(--navy); font-weight:600;}
+  .actions button:hover{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .actions button.danger{border-color:var(--red-bg); color:var(--red);}
+  .actions button.danger:hover{background:var(--red); border-color:var(--red); color:#fff;}
+  .script-row{display:none;} .script-row.open{display:table-row;}
+  .script-box{background:var(--script-box-bg); border:1px dashed var(--line); border-radius:6px; padding:11px 13px; font-size:12.3px; line-height:1.5; color:var(--script-box-fg); margin:4px 0;}
+  .script-box .script-btns{margin-top:7px; display:flex; gap:7px;}
+  .script-box .script-btns button{font-size:11px; padding:5px 9px; border-radius:5px; border:1px solid var(--blue); background:var(--surface); color:var(--blue); cursor:pointer; font-weight:600;}
+  .script-box .script-btns button:hover{background:var(--blue); color:#fff;}
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-fg); padding:9px 16px; border-radius:6px; font-size:12.3px; box-shadow:0 6px 20px rgba(0,0,0,0.22); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:100;}
+  .toast.show{opacity:1;}
+  .footer-note{text-align:center; color:var(--muted); font-size:11px; margin-top:24px;}
+  .pager{display:flex; justify-content:center; gap:8px; margin-top:14px;}
+  .pager button{padding:6px 12px; border-radius:5px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; font-size:12px;}
+  .pager button.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .pager button:disabled{opacity:.4; cursor:default;}
+  .trend-up{color:var(--green); font-weight:700;}
+  .trend-down{color:var(--red); font-weight:700;}
+  .trend-flat{color:var(--muted);}
+  .trend-cell{font-size:11.3px; line-height:1.5;}
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(15,25,45,0.5); z-index:50; align-items:center; justify-content:center; padding:16px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--surface); border-radius:10px; padding:22px 24px; width:100%; max-width:440px; box-shadow:0 16px 44px rgba(0,0,0,0.22); max-height:90vh; overflow-y:auto;}
+  .modal h3{margin:0 0 4px; color:var(--ink); font-family:var(--fd); font-weight:700; font-size:15.5px;}
+  .modal p.sub{color:var(--muted); font-size:12px; margin:0 0 14px; line-height:1.5;}
+  .modal label{display:block; font-size:11.3px; font-weight:700; color:var(--ink); margin:9px 0 4px;}
+  .modal input, .modal select, .modal textarea{width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:5px; font-size:13px; font-family:inherit; background:var(--surface); color:var(--ink);}
+  .modal textarea{resize:vertical; min-height:60px;}
+  .modal .modal-actions{display:flex; gap:9px; margin-top:16px;}
+  .modal .modal-actions button{flex:1; padding:9px; border-radius:5px; border:none; font-weight:700; cursor:pointer;}
+  .contact-log{background:var(--contact-log-bg); border-left:3px solid var(--blue); border-radius:4px; padding:6px 9px; font-size:11px; color:var(--contact-log-fg); margin-top:5px; line-height:1.4;}
+  .file-input-btn{position:relative; overflow:hidden; display:inline-block;}
+  .file-input-btn input[type=file]{position:absolute; left:0; top:0; opacity:0; width:100%; height:100%; cursor:pointer;}
+  .banner-import{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:12px 15px; margin-bottom:11px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .banner-import .info{flex:1; min-width:220px; font-size:11.8px; color:var(--muted);}
+  .banner-import .info b{color:var(--ink);}
+
+  /* ---------- aba "Top parados" (cards) ---------- */
+  .cards-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(252px,1fr)); gap:14px; margin-top:4px;}
+  .top-card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;}
+  .top-card-head{display:flex; align-items:flex-start; gap:10px;}
+  .top-card .avatar{width:38px; height:38px; border-radius:50%; flex:0 0 38px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13px; letter-spacing:.02em;}
+  .top-card-name{flex:1; min-width:0;}
+  .top-card-name .row-name{display:block; font-size:12.8px; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .top-card-name .row-sub{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .top-card-contact{min-height:20px;}
+  .top-card-stats{display:grid; grid-template-columns:1fr 1fr; gap:8px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:9px 0;}
+  .top-card-stats div{display:flex; flex-direction:column; gap:2px;}
+  .top-stat-label{font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted);}
+  .top-card-stats b{font-family:var(--fm); font-size:14px; color:var(--ink); font-variant-numeric:tabular-nums;}
+  .top-card .actions{margin-top:-2px;}
+  .top-card .script-box{margin:0;}
+
+  /* ---------- aba "Vendas por dia" ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:14px; margin-bottom:16px;}
+  .mini-kpi{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px 16px; position:relative;}
+  .mini-kpi::before{content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:3px; background:var(--orange);}
+  .mini-kpi .lab{font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700;}
+  .mini-kpi .val{font-family:var(--fm); font-size:26px; font-weight:600; color:var(--ink); margin:5px 0 2px; font-variant-numeric:tabular-nums;}
+  .mini-kpi .note{font-size:11px; color:var(--muted);}
+  @media (max-width:900px){
+    .sidebar{position:static; height:auto; width:100%;}
+    .main{margin-left:0;}
+  }
+</style>
+<script>
+  // aplica o tema antes da primeira pintura da página, pra não piscar claro→escuro
+  (function(){
+    try {
+      const saved = localStorage.getItem('top_theme_v1');
+      const theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if(theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    } catch(e){}
+  })();
+</script>
+</head>
+<body>
+
+<div class="app">
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="word">Afiliados Top</div>
+    <div class="stripe"></div>
+    <span class="brand-badge">🐯 painel ao vivo</span>
+    <small>Carteira de afiliados da Gaby Araujo — contatos e vendas reais (relatório BuyGoods)</small>
+  </div>
+  <div class="nav-section">
+    <div class="nav-heading">Filtrar por urgência</div>
+    <div class="nav-item active" data-tier="">
+      <span class="dot" style="background:#8892A6"></span>
+      <span class="label">Todos os afiliados</span>
+      <span class="count" id="countTodos">–</span>
+    </div>
+    <div class="nav-item" data-tier="novo">
+      <span class="dot" style="background:#0891B2"></span>
+      <span class="label">Novos</span>
+      <span class="count" id="countNovo">–</span>
+    </div>
+    <div class="nav-item" data-tier="ativo">
+      <span class="dot" style="background:#1E7B34"></span>
+      <span class="label">Ativo · 0–2 dias</span>
+      <span class="count" id="countAtivo">–</span>
+    </div>
+    <div class="nav-item" data-tier="atencao">
+      <span class="dot" style="background:#8A6D00"></span>
+      <span class="label">Atenção · 3–7 dias</span>
+      <span class="count" id="countAtencao">–</span>
+    </div>
+    <div class="nav-item" data-tier="critico">
+      <span class="dot" style="background:#B3261E"></span>
+      <span class="label">Crítico · 8–15 dias</span>
+      <span class="count" id="countCritico">–</span>
+    </div>
+    <div class="nav-item" data-tier="sumido">
+      <span class="dot" style="background:#5A1E17"></span>
+      <span class="label">Sumido · 16+ dias</span>
+      <span class="count" id="countSumido">–</span>
+    </div>
+    <div class="nav-item" data-tier="sem_venda_2026">
+      <span class="dot" style="background:#4A5468"></span>
+      <span class="label">Sem venda em 2026</span>
+      <span class="count" id="countSemVenda">–</span>
+    </div>
+    <div class="nav-item" id="navSemContato">
+      <span class="dot" style="background:#B45309"></span>
+      <span class="label">🚫 Sem contato na base</span>
+      <span class="count" id="countSemContato">–</span>
+    </div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-heading">Outras visões</div>
+    <div class="nav-item" id="navVendasDia">
+      <span class="dot" style="background:#2F5597"></span>
+      <span class="label">📈 Vendas por dia</span>
+    </div>
+  </div>
+  <div id="headerStats"></div>
+  <div class="sidebar-sync">
+    <button class="theme-toggle" id="themeToggle" type="button">
+      <span class="icon" id="themeToggleIcon">🌙</span>
+      <span id="themeToggleLabel">Modo escuro</span>
+    </button>
+    <span id="syncBadge"></span>
+  </div>
+</aside>
+<main class="main">
+<div class="wrap">
+
+<div id="afiliadosSection">
+
+  <div class="period-tabs" id="mainViewTabs">
+    <button class="active" data-view="tabela">Geral</button>
+    <button data-view="topparados">🔥 Top parados em faturamento</button>
+  </div>
+
+  <div id="viewTabela">
+
+  <div class="banner-import">
+    <div class="info">
+      <b>Atualização diária:</b> jogue aqui o relatório da BuyGoods que chega por e-mail todo dia (Relatorio_BuyGoods_AAAA-MM-DD.xlsx) pra atualizar última venda, status, sequência e faturamento líquido de todos os produtos de uma vez. Sem precisar mexer no código. <span id="lastImportInfo"></span>
+    </div>
+    <span class="file-input-btn btn-navy" style="padding:8px 14px; border-radius:5px; font-weight:700; font-size:12.5px; color:#fff;">
+      Importar relatório BuyGoods
+      <input type="file" id="buyGoodsImportFile" accept=".xlsx,.xls,.csv">
+    </span>
+    <button class="btn-orange" id="addAffiliateBtn">+ Inserir afiliado</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Buscar por nome ou produto...">
+    <select id="tierFilter">
+      <option value="">Todas as urgências</option>
+      <option value="novo">Novos</option>
+      <option value="ativo">Ativo (0-2d)</option>
+      <option value="atencao">Atenção (3-7d)</option>
+      <option value="critico">Crítico (8-15d)</option>
+      <option value="sumido">Sumido (16d+)</option>
+      <option value="sem_venda_2026">Sem venda confirmada em 2026</option>
+    </select>
+    <select id="contactFilter">
+      <option value="">Com ou sem contato</option>
+      <option value="com">Só com contato</option>
+      <option value="sem">Só sem contato</option>
+    </select>
+    <select id="ontemFilter">
+      <option value="">Ontem: todos</option>
+      <option value="sim">Vendeu ontem</option>
+      <option value="nao">Não vendeu ontem</option>
+    </select>
+    <select id="semanaFilter">
+      <option value="">Esta semana: todos</option>
+      <option value="sim">Vendeu esta semana</option>
+      <option value="nao">Não vendeu esta semana</option>
+    </select>
+    <select id="sortFilter">
+      <option value="">Ordem padrão</option>
+      <option value="dias_desc">Dias sem vender (mais dias primeiro)</option>
+      <option value="faturamento_desc">Faturamento do mês (maior primeiro)</option>
+      <option value="streak_desc">Sequência diária (mais dias seguidos primeiro)</option>
+    </select>
+    <select id="monthFilter">
+      <option value="">Faturamento: sem dados importados ainda</option>
+    </select>
+    <button class="btn-ghost" id="copySheetsBtn">Copiar p/ Sheets</button>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#0891B2"></span>Novos · ainda sem venda registrada</span>
+    <span><span class="dot" style="background:#1E7B34"></span>Ativo · 0–2 dias</span>
+    <span><span class="dot" style="background:#8A6D00"></span>Atenção · 3–7 dias</span>
+    <span><span class="dot" style="background:#B3261E"></span>Crítico · 8–15 dias</span>
+    <span><span class="dot" style="background:#5A1E17"></span>Sumido · 16+ dias</span>
+    <span><span class="dot" style="background:#4A5468"></span>sem venda confirmada em 2026</span>
+    <span class="sep">·</span>
+    <span>clique no nome do afiliado pra ver produtos, volume, tendência e histórico de vendas</span>
+  </div>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%">Afiliado</th>
+        <th style="width:13%">Produto</th>
+        <th style="width:13%" id="thFaturamento">Faturamento do mês</th>
+        <th style="width:10%">Parado há</th>
+        <th style="width:19%">Contato</th>
+        <th style="width:17%">Ação</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  </div>
+  <div class="pager" id="pager"></div>
+
+  </div>
+
+  <div id="viewTopParados" style="display:none">
+    <div class="alert blue">Afiliados que já venderam de verdade (faturamento histórico ou volume confirmado) e agora estão em <b>Atenção, Crítico ou Sumido</b> — ordenados do maior pro menor faturamento. São os que mais valem uma ligação hoje. <span id="topParadosCount" style="font-weight:700;"></span></div>
+    <div class="cards-grid" id="topParadosGrid"></div>
+  </div>
+
+  <div class="footer-note">Universo: afiliados da carteira da Gaby (planilha "Afiliados Gaby — Potenciais" + os inseridos aqui), cruzados com as vendas do relatório diário da BuyGoods · Afiliados Top</div>
+
+</div>
+
+<div id="viewVendasDia" style="display:none">
+  <h2 class="section-title"><span class="bar"></span>Vendas por dia</h2>
+  <div class="alert blue">Alimentada pelo mesmo relatório da BuyGoods que você já importa na aba <b>Geral</b> (botão "Importar relatório BuyGoods") — não precisa importar de novo aqui, os dois usam o mesmo arquivo. Esta visão soma as vendas de <b>todos os afiliados</b> por produto, dia a dia — conta só o <b>pedido frontal</b> (upsell, downsell e frete não entram na contagem, só somam no bruto/líquido). <span id="vendasDiaInfo"></span></div>
+  <div class="kpi-row" id="vendasDiaKpis"></div>
+  <div class="period-tabs" id="vendasDiaTabs">
+    <button class="active" data-periodo="dia">Por dia (últimos 14)</button>
+    <button data-periodo="semana">Por semana</button>
+    <button data-periodo="mes">Por mês</button>
+  </div>
+  <div class="table-scroll">
+  <table id="vendasDiaTableEl">
+    <thead><tr id="vendasDiaHead"></tr></thead>
+    <tbody id="vendasDiaBody"></tbody>
+  </table>
+  </div>
+</div>
+
+</main>
+</div>
+
+<div class="modal-bg" id="addModalBg">
+  <div class="modal">
+    <h3>Inserir afiliado</h3>
+    <p class="sub">Fica salvo só neste navegador (localStorage) — não sincroniza com outros computadores do time. Use "Copiar p/ Sheets" depois pra levar pro controle oficial.</p>
+    <label>Nome do afiliado *</label>
+    <input type="text" id="mNome" placeholder="Ex: João da Silva">
+    <label>Telefone (WhatsApp)</label>
+    <input type="text" id="mTel" placeholder="Ex: (11) 99999-9999">
+    <label>Usuário Telegram</label>
+    <input type="text" id="mTg" placeholder="Ex: @usuario">
+    <label>Produto (planilha)</label>
+    <input type="text" id="mProduto" placeholder="Ex: BreathEaseX">
+    <label>Observação</label>
+    <textarea id="mObs" placeholder="Ex: veio indicado por fulano..."></textarea>
+
+    <div class="detail-grid" style="margin-top:6px;">
+      <div>
+        <label>Nome no dash da empresa</label>
+        <input type="text" id="mNomeDash" placeholder="Ex: joao-silva">
+      </div>
+      <div>
+        <label>Tipo de tráfego</label>
+        <select id="mTrafego">
+          <option value="">—</option>
+          <option value="Facebook">Facebook</option>
+          <option value="YouTube">YouTube</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div>
+        <label>CPA do afiliado</label>
+        <input type="text" id="mCpa" placeholder="Ex: 35">
+      </div>
+      <div>
+        <label>Usuário/e-mail BuyGoods</label>
+        <input type="text" id="mBuygoods" placeholder="Ex: joao@email.com">
+      </div>
+      <div>
+        <label>Atendente que falou com o afiliado</label>
+        <select id="mAtendente">
+          <option value="">—</option>
+          <option value="Gaby">Gaby</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="mCancel">Cancelar</button>
+      <button class="btn-orange" id="mSave">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="contactModalBg">
+  <div class="modal">
+    <h3>Registrar contato</h3>
+    <p class="sub" id="contactModalName"></p>
+    <div id="cHistorico" style="margin-bottom:12px;"></div>
+    <label>Oferta / script usado</label>
+    <select id="cOferta"></select>
+    <label>Resumo da conversa</label>
+    <textarea id="cResumo" placeholder="Ex: respondeu, disse que vai testar semana que vem"></textarea>
+    <label>Data</label>
+    <input type="date" id="cData">
+    <label>Atendente que falou</label>
+    <select id="cAtendente">
+      <option value="">—</option>
+      <option value="Gaby">Gaby</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cCancel">Cancelar</button>
+      <button class="btn-orange" id="cSave">Adicionar registro</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="detailModalBg">
+  <div class="modal" style="max-width:600px;">
+    <h3 id="detailName"></h3>
+    <p class="sub" id="detailSub"></p>
+    <div id="detailTrend" style="font-size:12.5px; margin:-6px 0 10px;"></div>
+    <div id="detailContactLog" style="font-size:12px; margin:0 0 10px;"></div>
+    <div id="detailLifetime" style="font-size:12px; margin:0 0 10px;"></div>
+
+    <div class="detail-grid">
+      <div>
+        <label>Telefone (WhatsApp)</label>
+        <input type="text" id="dTelefone" placeholder="Ex: (11) 99999-9999">
+      </div>
+      <div>
+        <label>Usuário Telegram</label>
+        <input type="text" id="dTelegram" placeholder="Ex: @usuario">
+      </div>
+      <div>
+        <label>Nome no dash da empresa</label>
+        <input type="text" id="dNomeDash" placeholder="Ex: joao-silva">
+      </div>
+      <div>
+        <label>Tipo de tráfego</label>
+        <select id="dTrafego">
+          <option value="">—</option>
+          <option value="Facebook">Facebook</option>
+          <option value="YouTube">YouTube</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div>
+        <label>CPA do afiliado</label>
+        <input type="text" id="dCpa" placeholder="Ex: 35">
+      </div>
+      <div>
+        <label>Usuário/e-mail BuyGoods</label>
+        <input type="text" id="dBuygoods" placeholder="Ex: joao@email.com">
+      </div>
+      <div>
+        <label>Atendente que falou com o afiliado</label>
+        <select id="dAtendente">
+          <option value="">—</option>
+          <option value="Gaby">Gaby</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-orange" id="dSaveMeta" style="flex:0 0 auto; padding:9px 16px;">Salvar dados</button>
+    </div>
+
+    <h2 class="section-title" style="margin-top:20px;"><span class="bar"></span>Análise de vendas</h2>
+    <p class="sub" id="detailAnalysisSub"></p>
+    <div class="period-tabs" id="periodTabs">
+      <button data-period="hoje">Hoje</button>
+      <button data-period="ontem">Ontem</button>
+      <button data-period="mes" class="active">Este mês</button>
+      <button data-period="ano">Este ano</button>
+      <button data-period="tudo">Tudo</button>
+    </div>
+    <div id="detailChartBox"></div>
+
+    <div class="modal-actions" style="margin-top:18px;">
+      <button class="btn-ghost" id="dClose">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copiado!</div>
+
+<script>
+const BASE_DATA = []; // a base da Gaby fica na planilha dela (AddedAffiliates), não no código — o repositório é público
+
+const OFFERS = [
+  {nome:"AlphaErec", linha:"Gelatin Trick",
+   vsl:"https://drive.google.com/drive/u/0/folders/1cAL7np-HsxiRmpnXO5CiIeOkj7UjKReq",
+   ads:"https://drive.google.com/drive/folders/1fNdcgP9s3dfd2vUJKPye6MHDQDdHQt_v",
+   desc:"Performance masculina, uma das ofertas que mais está puxando volume agora."},
+  {nome:"MounjaMelt", linha:"Gelatin Trick",
+   vsl:"https://drive.google.com/drive/u/0/folders/1afXIgFsFdpfh2pUdzf05FN7tk2ddj9ir",
+   ads:"https://drive.google.com/drive/folders/1aouCjkO85xcpv5aApzFQfZltImKhdEtY",
+   desc:"Emagrecimento, mesmo ângulo Gelatin Trick que está performando em AlphaErec."},
+  {nome:"MaroBrain", linha:"Rosemary Trick",
+   vsl:"https://drive.google.com/drive/folders/1XPLieeoVZr84M7RgEc3tNQyO3xxvF99S",
+   ads:"https://drive.google.com/drive/folders/1E3B2P41OqmIfT7c2jTbU1yX0wvCixGxw",
+   desc:"Memória/foco, ângulo Rosemary Trick, entre as 3 ofertas mais recentes escalando."}
+];
+
+// ---------- Persistência local (localStorage) ----------
+const LS_ADDED = 'top_added_affiliates_v1';
+const LS_CONTACTS = 'top_contact_log_v1';
+const LS_IMPORT_INFO = 'top_last_import_v1';
+const LS_UPDATES = 'top_import_updates_v1'; // atualizações vindas de import diário, por nome normalizado
+const LS_META = 'top_affiliate_meta_v1'; // nome no dash, tipo de tráfego, CPA, usuário BuyGoods — por nome normalizado
+const LS_REVENUE = 'top_revenue_daily_v1'; // faturamento real por dia (do relatório allProducts), acumulado import a import
+const LS_REVENUE_NAMES = 'top_revenue_names_v1'; // nome de exibição de afiliados vistos só em import (nome_norm -> nome)
+const LS_LIFETIME = 'top_lifetime_stats_v1'; // totais vitalícios (desde o início da operação) do Master Affiliates, sem granularidade de data
+const LS_VENDAS_PRODUTO = 'top_vendas_produto_dia_v1'; // total de vendas da operação inteira, por produto e por dia (soma de todos os afiliados)
+const LS_VENDAS_VALOR = 'top_vendas_valor_dia_v1'; // bruto/reembolso/chargeback/frete/imposto por produto e por dia (mesma base do LS_VENDAS_PRODUTO)
+const LS_CANAIS = 'top_canais_interno_dia_v1'; // vendas/valores por dia das contas internas (Helpgrid, Welcome, Gestores) — normalmente excluídas do ranking de afiliados
+const LS_CANAL_LIFETIME = 'top_canal_lifetime_v1'; // totais gerais (sem granularidade de dia) por canal, vindos do export Master Affiliates — mesmo padrão do LS_LIFETIME por afiliado
+const LS_CANAL_MENSAL = 'top_canal_mensal_v1'; // totais por canal e por mês (quando o Master Affiliates vem separado mês a mês), pra completar a coluna "Por mês" mesmo sem dado diário
+
+// ---------- Sincronização com Google Sheets (Apps Script) ----------
+// Depois de implantar o Apps Script (ver /apps_script/Code.gs), cole a URL aqui.
+// Enquanto ficar vazio, a ferramenta funciona só com localStorage (não sincroniza entre navegadores).
+const APPS_SCRIPT_URL = "";
+
+let syncStatus = APPS_SCRIPT_URL ? 'pendente' : 'desativado'; // desativado | pendente | ok | erro
+
+async function apiGet(){
+  if(!APPS_SCRIPT_URL) return null;
+  try {
+    const r = await fetch(APPS_SCRIPT_URL + '?action=list');
+    const j = await r.json();
+    syncStatus = j && j.ok ? 'ok' : 'erro';
+    return j;
+  } catch(e){
+    console.warn('Sincronização (GET) falhou, usando cache local:', e);
+    syncStatus = 'erro';
+    return null;
+  }
+}
+
+async function apiPost(action, data){
+  if(!APPS_SCRIPT_URL) return null;
+  try {
+    // Content-Type text/plain evita o preflight CORS que o Apps Script não responde
+    const r = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({action, data})
+    });
+    const j = await r.json();
+    if(!j || !j.ok) console.warn('Apps Script retornou erro:', j);
+    return j;
+  } catch(e){
+    console.warn('Sincronização (POST) falhou — salvo só localmente por enquanto:', e);
+    syncStatus = 'erro';
+    return null;
+  }
+}
+
+// Pares confirmados manualmente como sendo a mesma pessoa com nome escrito diferente
+// entre a base de contato e os relatórios da BuyGoods (não é fuzzy-match automático —
+// só entra aqui depois de confirmado, pra não arriscar juntar duas pessoas diferentes).
+const NAME_ALIASES = {
+  'fabio sobral torrezani': 'fabio torrezani'
+};
+function normName(s){
+  if(!s) return '';
+  const base = s.toString().trim().toLowerCase()
+    .normalize('NFKD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+  return NAME_ALIASES[base] || base;
+}
+function loadLS(key, fallback){
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function saveLS(key, val){
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){ console.warn('localStorage falhou', e); }
+}
+
+let addedAffiliates = loadLS(LS_ADDED, []);
+let contactLog = loadLS(LS_CONTACTS, {});      // { nome_norm: [{oferta, resumo, data, atendente}, ...] } — histórico completo, mais recente por último a entrar
+let importUpdates = loadLS(LS_UPDATES, {});    // { nome_norm: {volume_ago, volume_set, ultima_venda, dias_sem_vender, tier, confirmado, produtos} }
+let affiliateMeta = loadLS(LS_META, {});       // { nome_norm: {nome_dash, trafego, cpa, buygoods_user} }
+let revenueDaily = loadLS(LS_REVENUE, {});     // { nome_norm: { 'YYYY-MM-DD': {vendas, faturamento, produtos} } }
+let revenueNames = loadLS(LS_REVENUE_NAMES, {}); // { nome_norm: 'Nome de exibição' } — pra afiliados só vistos em import
+let lifetimeStats = loadLS(LS_LIFETIME, {});   // { nome_norm: {nome, produtos, orders, gross, net, commissions, refunds} } — totais desde o início, sem data
+let vendasPorProdutoDia = loadLS(LS_VENDAS_PRODUTO, {}); // { produto: { 'YYYY-MM-DD': vendas } } — soma de todos os afiliados
+let vendasValorPorProdutoDia = loadLS(LS_VENDAS_VALOR, {}); // { produto: { 'YYYY-MM-DD': {gross,refund,chargeback,shipping,taxes} } }
+let canaisPorDia = loadLS(LS_CANAIS, {}); // { canalKey: { 'YYYY-MM-DD': {vendas,gross,refund,chargeback,shipping,taxes} } }
+let canalLifetime = loadLS(LS_CANAL_LIFETIME, {}); // { canalKey: {orders,gross,net,refunds,taxes,periodo} } — sem data, vindo do Master Affiliates
+let canalMensal = loadLS(LS_CANAL_MENSAL, {}); // { canalKey: { 'YYYY-MM': {orders,gross,net,refunds,taxes} } } — Master Affiliates separado por mês
+let lastImportInfo = loadLS(LS_IMPORT_INFO, null);
+
+function serverAddedToLocal(obj){
+  return Object.values(obj).map(r => ({
+    nome: r.nome,
+    telefone: r.telefone || null,
+    tel_digits: r.telefone ? String(r.telefone).replace(/\D/g,'') : null,
+    conf_telefone: r.telefone ? 'alta' : null,
+    telegram: r.telegram || null,
+    tg_user: r.telegram ? String(r.telegram).replace('@','') : null,
+    conf_telegram: r.telegram ? 'alta' : null,
+    status_planilha: r.observacao || 'adicionado manualmente na ferramenta',
+    produto_planilha: r.produto_planilha || null,
+    fontes_planilha: ['adicionado manualmente'],
+    novo: r.novo === true || r.novo === 'true',
+    confirmado: false, produtos: [], total_pedidos: 0, volume_total: 0,
+    ultima_venda: null, dias_sem_vender: null, tier: 'sem_venda_2026',
+    volume_ago: null, volume_set: null, net_ago: null, net_set: null, tem_dado_custo: false,
+    spark: [0,0,0,0,0,0,0,0]
+  }));
+}
+
+function serverContactsToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    const r = obj[k];
+    if(r.historico_json){
+      try { out[k] = JSON.parse(r.historico_json); } catch(e){ out[k] = []; }
+    } else if(r.oferta || r.resumo || r.data){
+      // registro de antes desse histórico virar lista — entra como o primeiro item
+      out[k] = [{oferta: r.oferta||'', resumo: r.resumo||'', data: r.data||'', atendente: r.atendente||''}];
+    } else {
+      out[k] = [];
+    }
+  });
+  return out;
+}
+
+function serverMetaToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    const r = obj[k];
+    out[k] = {nome_dash: r.nome_dash || '', trafego: r.trafego || '', cpa: r.cpa || '', buygoods_user: r.buygoods_user || '',
+      telefone: r.telefone || '', telegram: r.telegram || '', atendente: r.atendente || ''};
+  });
+  return out;
+}
+
+function serverRevenueToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    try { out[k] = JSON.parse(obj[k].dados_json || '{}'); } catch(e){ out[k] = {}; }
+  });
+  return out;
+}
+
+function serverVendasProdutoToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    try { out[k] = JSON.parse(obj[k].dados_json || '{}'); } catch(e){ out[k] = {}; }
+  });
+  return out;
+}
+
+function serverVendasValorToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    try { out[k] = JSON.parse(obj[k].dados_json || '{}'); } catch(e){ out[k] = {}; }
+  });
+  return out;
+}
+
+function serverCanaisToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    try { out[k] = JSON.parse(obj[k].dados_json || '{}'); } catch(e){ out[k] = {}; }
+  });
+  return out;
+}
+
+function serverCanalLifetimeToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    const r = obj[k];
+    out[k] = {
+      orders: Number(r.orders)||0, gross: Number(r.gross)||0, net: Number(r.net)||0,
+      refunds: Number(r.refunds)||0, taxes: Number(r.taxes)||0, periodo: r.periodo || ''
+    };
+  });
+  return out;
+}
+
+function serverCanalMensalToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    const r = obj[k];
+    if(!r.canal || !r.mes) return;
+    const mesKey = String(r.mes).replace('_','-'); // volta "2026_07" -> "2026-07" (formato salvo com "_" pra não virar data no Sheets)
+    if(!/^\d{4}-\d{2}$/.test(mesKey)) return; // ignora linha antiga/corrompida (ex: mes virou timestamp por autoconversão do Sheets)
+    if(!out[r.canal]) out[r.canal] = {};
+    out[r.canal][mesKey] = {
+      orders: Number(r.orders)||0, gross: Number(r.gross)||0, net: Number(r.net)||0,
+      refunds: Number(r.refunds)||0, taxes: Number(r.taxes)||0
+    };
+  });
+  return out;
+}
+
+function serverLifetimeToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    const r = obj[k];
+    out[k] = {
+      nome: r.nome,
+      produtos: r.produtos ? String(r.produtos).split(',').map(s=>s.trim()).filter(Boolean) : [],
+      orders: Number(r.orders)||0, gross: Number(r.gross)||0, net: Number(r.net)||0,
+      commissions: Number(r.commissions)||0, refunds: Number(r.refunds)||0
+    };
+  });
+  return out;
+}
+
+function serverImportsToLocal(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    const r = obj[k];
+    out[k] = {
+      volume_ago: r.volume_ago === '' ? null : Number(r.volume_ago),
+      volume_set: r.volume_set === '' ? null : Number(r.volume_set),
+      net_ago: r.net_ago === '' ? null : Number(r.net_ago),
+      net_set: r.net_set === '' ? null : Number(r.net_set),
+      tem_dado_custo: r.tem_dado_custo === true || r.tem_dado_custo === 'true',
+      ultima_venda: fmtDate_(r.ultima_venda) || null,
+      dias_sem_vender: r.dias_sem_vender === '' ? null : Number(r.dias_sem_vender),
+      tier: r.tier || 'sem_venda_2026',
+      confirmado: r.confirmado === true || r.confirmado === 'true',
+      total_pedidos: Number(r.total_pedidos)||0,
+      volume_total: Number(r.volume_total)||0,
+      produtos: r.produtos ? String(r.produtos).split(',').map(s=>s.trim()).filter(Boolean) : [],
+      streak_diario: Number(r.streak_diario)||0,
+      dados_diarios: r.dados_diarios ? (function(){ try{ return JSON.parse(r.dados_diarios); }catch(e){ return {}; } })() : {}
+    };
+  });
+  return out;
+}
+
+async function syncFromServer(){
+  const j = await apiGet();
+  if(!j || !j.ok) { renderSyncBadge(); return false; }
+  // servidor é a fonte de verdade quando configurado — sobrescreve cache local
+  addedAffiliates = serverAddedToLocal(j.added || {});
+  contactLog = serverContactsToLocal(j.contacts || {});
+  importUpdates = serverImportsToLocal(j.imports || {});
+  affiliateMeta = serverMetaToLocal(j.meta || {});
+  revenueDaily = serverRevenueToLocal(j.revenue || {});
+  Object.keys(j.revenue || {}).forEach(k => { if(j.revenue[k].nome) revenueNames[k] = j.revenue[k].nome; });
+  lifetimeStats = serverLifetimeToLocal(j.lifetime || {});
+  vendasPorProdutoDia = serverVendasProdutoToLocal(j.vendasPorProduto || {});
+  vendasValorPorProdutoDia = serverVendasValorToLocal(j.vendasValorPorProduto || {});
+  canaisPorDia = serverCanaisToLocal(j.canaisInterno || {});
+  canalLifetime = serverCanalLifetimeToLocal(j.canalLifetime || {});
+  canalMensal = serverCanalMensalToLocal(j.canalMensal || {});
+  saveLS(LS_ADDED, addedAffiliates);
+  saveLS(LS_CONTACTS, contactLog);
+  saveLS(LS_UPDATES, importUpdates);
+  saveLS(LS_META, affiliateMeta);
+  saveLS(LS_REVENUE, revenueDaily);
+  saveLS(LS_REVENUE_NAMES, revenueNames);
+  saveLS(LS_LIFETIME, lifetimeStats);
+  saveLS(LS_VENDAS_PRODUTO, vendasPorProdutoDia);
+  saveLS(LS_VENDAS_VALOR, vendasValorPorProdutoDia);
+  saveLS(LS_CANAIS, canaisPorDia);
+  saveLS(LS_CANAL_LIFETIME, canalLifetime);
+  saveLS(LS_CANAL_MENSAL, canalMensal);
+  renderSyncBadge();
+  return true;
+}
+
+function renderSyncBadge(){
+  const el = document.getElementById('syncBadge');
+  if(!el) return;
+  const map = {
+    desativado: ['Sem sincronização (config. Apps Script no código)', '#EAECF2', '#4A5468'],
+    pendente: ['Sincronizando...', '#FFF6D9', '#8A6D00'],
+    ok: ['Sincronizado com Google Sheets', '#E3F5E7', '#1E7B34'],
+    erro: ['Sem conexão — usando dados salvos neste navegador', '#FCE8E6', '#B3261E']
+  };
+  const [txt,bg,fg] = map[syncStatus] || map.desativado;
+  el.innerHTML = `<span class="dot" style="background:${fg}"></span>${escapeHtml(txt)}`;
+  el.style.background = 'rgba(255,255,255,.06)'; el.style.color = '#C7D0E0';
+  el.querySelector('.dot').style.background = fg;
+}
+
+
+function buildData(){
+  const merged = BASE_DATA.map(e => Object.assign({}, e));
+  // aplica atualizações de import diário
+  merged.forEach(e => {
+    const key = normName(e.nome);
+    // o nome já conhecido na base de contato é o canônico — import não deve sobrescrevê-lo
+    // (evita, por ex., "Fabio Torrezani" virar "FABIO SOBRAL TORREZANI" só por causa de um alias)
+    if(importUpdates[key]) Object.assign(e, importUpdates[key], {nome: e.nome});
+    e.receita_diaria = revenueDaily[key] || {};
+    e.lifetime = lifetimeStats[key] || null;
+  });
+  // acrescenta afiliados inseridos manualmente (se não colidir com nome já existente)
+  addedAffiliates.forEach(a => {
+    const key = normName(a.nome);
+    if(!merged.some(e => normName(e.nome) === key)) merged.push(Object.assign({receita_diaria: revenueDaily[key] || {}, lifetime: lifetimeStats[key] || null}, a));
+  });
+
+  // afiliados que só aparecem em algum import (PEDIDOS, faturamento ou base histórica) e ainda não têm contato conhecido
+  const knownKeys = new Set(merged.map(e => normName(e.nome)));
+  // painel exclusivo da carteira da Gaby: afiliado que só aparece em relatório BuyGoods (sem estar na
+  // lista dela) não vira linha aqui
+  const importOnlyKeys = new Set();
+  importOnlyKeys.forEach(key => {
+    if(knownKeys.has(key)) return;
+    const upd = importUpdates[key] || {};
+    const life = lifetimeStats[key] || null;
+    merged.push({
+      nome: upd.nome || revenueNames[key] || (life && life.nome) || key,
+      telefone: null, tel_digits: null, conf_telefone: null,
+      telegram: null, tg_user: null, conf_telegram: null,
+      status_planilha: 'sem contato na base — só aparece em import',
+      produto_planilha: null,
+      fontes_planilha: ['só em import'],
+      confirmado: upd.confirmado || false,
+      produtos: upd.produtos || [],
+      total_pedidos: upd.total_pedidos || 0,
+      volume_total: upd.volume_total || 0,
+      ultima_venda: upd.ultima_venda || null,
+      dias_sem_vender: upd.dias_sem_vender!==undefined ? upd.dias_sem_vender : null,
+      tier: upd.tier || 'sem_venda_2026',
+      volume_ago: upd.volume_ago!==undefined ? upd.volume_ago : null,
+      volume_set: upd.volume_set!==undefined ? upd.volume_set : null,
+      net_ago: upd.net_ago!==undefined ? upd.net_ago : null,
+      net_set: upd.net_set!==undefined ? upd.net_set : null,
+      tem_dado_custo: upd.tem_dado_custo || false,
+      streak_diario: upd.streak_diario || 0,
+      dados_diarios: upd.dados_diarios || {},
+      receita_diaria: revenueDaily[key] || {},
+      lifetime: life
+    });
+    knownKeys.add(key);
+  });
+
+  // recalcula dias-sem-vender/tier ao vivo (a partir de "hoje") pra todo mundo, inclusive quem só existe
+  // na base original — evita ficar com um tier "cravado" de quando a base foi gerada
+  merged.forEach(e => {
+    const r = recalcTierFromLastSale_(e.ultima_venda);
+    e.dias_sem_vender = r.dias;
+    // "novo" é um selo manual (afiliado recém-cadastrado, ainda sem venda) — assim que ele vender de
+    // verdade, ultima_venda deixa de ser null e ele sai do selo pro tier real automaticamente
+    e.tier = (e.novo && !e.ultima_venda) ? 'novo' : r.tier;
+    applyContactOverride_(e);
+  });
+
+  return merged;
+}
+
+function fmtMoney(v){ return v.toLocaleString('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0}); }
+function fmtDate_(s){ if(!s) return ''; const m = String(s).match(/^\d{4}-\d{2}-\d{2}/); return m ? m[0] : String(s); }
+function escapeHtml(s){ if(s===null||s===undefined) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const TIER_COLORS_ = {novo:'#0891B2', ativo:'#1E7B34', atencao:'#8A6D00', critico:'#B3261E', sumido:'#5A1E17', sem_venda_2026:'#4A5468'};
+function tierColor_(tier){ return TIER_COLORS_[tier] || 'transparent'; }
+
+function updateNavCounts(){
+  const counts = {novo:0, ativo:0, atencao:0, critico:0, sumido:0, sem_venda_2026:0};
+  DATA.forEach(e => { if(counts[e.tier]!==undefined) counts[e.tier]++; });
+  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  set('countTodos', DATA.length);
+  set('countNovo', counts.novo);
+  set('countAtivo', counts.ativo);
+  set('countAtencao', counts.atencao);
+  set('countCritico', counts.critico);
+  set('countSumido', counts.sumido);
+  // "Sem venda em 2026" já esconde quem não tem contato na lista, então o badge reflete só quem
+  // tem contato — os sem contato desse tier entram na contagem da aba "Sem contato na base"
+  set('countSemVenda', counts.sem_venda_2026);
+  set('countSemContato', DATA.filter(e => !(e.telefone || e.telegram)).length);
+}
+
+document.querySelectorAll('.nav-item[data-tier]').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item[data-tier]').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('tierFilter').value = item.dataset.tier;
+    semContatoAtivo = false;
+    if(document.getElementById('contactFilter').value === 'sem') document.getElementById('contactFilter').value = '';
+    showView_('afiliados');
+    applyFilters();
+  });
+});
+document.getElementById('navSemContato').addEventListener('click', () => {
+  document.getElementById('tierFilter').value = '';
+  document.getElementById('contactFilter').value = 'sem';
+  semContatoAtivo = true;
+  showView_('afiliados');
+  applyFilters();
+});
+document.getElementById('contactFilter').addEventListener('change', () => {
+  if(document.getElementById('contactFilter').value !== 'sem') semContatoAtivo = false;
+});
+
+function pickOffer(produtos){
+  const p = (produtos||[]).join(' ').toLowerCase();
+  const candidates = OFFERS.filter(o => !p.includes(o.nome.toLowerCase()));
+  return candidates.length ? candidates[0] : OFFERS[0];
+}
+// Tom humanizado, casual, adaptado por segmento (mesma estrutura, saudação + CTA final iguais —
+// só muda a frase do meio, que reconhece a situação real do afiliado antes de puxar a oferta).
+function scriptText_(entry, offer){
+  const nomeAbertura = (entry.nome||'').split(' ')[0];
+  let meio;
+  if(entry.tier === 'sem_venda_2026'){
+    meio = `Vi seu contato aqui na nossa lista de afiliados, mas não achei nenhuma venda sua registrada esse ano — pode ser até que você nem lembre que ainda tá cadastrado com a gente haha! De qualquer forma, separei uma oferta bem escalada agora (a ${offer.nome}) e lembrei de você.`;
+  } else if(entry.tier === 'ativo'){
+    meio = `Vi que você tá mandando bem por aqui, e separei mais uma oferta bem escalada (a ${offer.nome}) — na hora lembrei de você!`;
+  } else {
+    meio = `Faz um tempinho que a gente não troca uma ideia por aqui — separei uma oferta bem escalada (a ${offer.nome}) e na hora lembrei de você.`;
+  }
+  return `Boooom dia, ${nomeAbertura}! Espero que esteja bem, mas espero que fique melhor ainda haha! ${meio} Prefere que eu te encaminhe as informações por aqui?`;
+}
+function buildScript(entry){
+  const offer = pickOffer(entry.produtos);
+  return {offer, text: scriptText_(entry, offer)};
+}
+
+function renderStats(list){
+  const total = list.length;
+  const comContato = list.filter(e => e.telefone || e.telegram).length;
+  const confirmados = list.filter(e => e.confirmado).length;
+  const volume = list.reduce((s,e) => s + (e.volume_total||0), 0);
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat-chip"><b>${total}</b><span>Afiliados</span></div>
+    <div class="stat-chip"><b>${comContato}</b><span>Com contato</span></div>
+    <div class="stat-chip"><b>${confirmados}</b><span>C/ venda confirmada</span></div>
+    <div class="stat-chip"><b>${fmtMoney(volume)}</b><span>Volume confirmado</span></div>`;
+}
+
+function contactCell(e){
+  let html = '';
+  if(e.tel_digits) html += `<a class="wa" href="https://wa.me/${e.tel_digits}" target="_blank">WhatsApp</a><span class="conf conf-${e.conf_telefone}">${e.conf_telefone}</span>`;
+  if(e.tg_user) html += `<br><a class="tg" href="https://t.me/${e.tg_user}" target="_blank">@${escapeHtml(e.tg_user)}</a><span class="conf conf-${e.conf_telegram}">${e.conf_telegram}</span>`;
+  const meta = affiliateMeta[normName(e.nome)];
+  if(meta && meta.buygoods_user) html += `<br><span class="bg-pill">BuyGoods: ${escapeHtml(meta.buygoods_user)}</span>`;
+  if(meta && meta.atendente) html += `<br><span class="bg-pill">Atendente: ${escapeHtml(meta.atendente)}</span>`;
+  if(!html) return '<span class="no-contact">sem contato na base</span>';
+  return `<div class="contact-links">${html}</div>`;
+}
+
+function pct_(e){
+  const ago = e.volume_ago, set = e.volume_set;
+  if(!ago || set===null || set===undefined) return null;
+  return Math.round(((set-ago)/ago)*100);
+}
+function pctBadge_(e){
+  const pct = pct_(e);
+  if(pct===null) return '';
+  const cls = pct > 5 ? 'trend-up' : (pct < -5 ? 'trend-down' : 'trend-flat');
+  return `<br><span class="${cls}" style="font-size:10.5px; font-weight:700;">${pct>0?'+':''}${pct}%</span>`;
+}
+
+function monthKeysAvailable_(){
+  const set = new Set();
+  Object.keys(revenueDaily).forEach(k => {
+    Object.keys(revenueDaily[k]).forEach(d => set.add(d.slice(0,7)));
+  });
+  return Array.from(set).sort().reverse();
+}
+
+function updateMonthOptions(){
+  const sel = document.getElementById('monthFilter');
+  const months = monthKeysAvailable_();
+  const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const prevVal = sel.value;
+  if(months.length === 0){
+    sel.innerHTML = '<option value="">Faturamento: sem dados importados ainda</option>';
+    return;
+  }
+  sel.innerHTML = months.map(mk => {
+    const [y,m] = mk.split('-');
+    return `<option value="${mk}">Faturamento: ${monthNames[parseInt(m)-1]} de ${y}</option>`;
+  }).join('');
+  sel.value = months.includes(prevVal) ? prevVal : months[0];
+}
+
+function produtosFallback_(e){
+  if(e.produtos && e.produtos.length) return e.produtos;
+  const dias = Object.keys(e.receita_diaria||{}).sort().reverse();
+  if(dias.length && e.receita_diaria[dias[0]].produtos) return e.receita_diaria[dias[0]].produtos;
+  if(e.lifetime && e.lifetime.produtos && e.lifetime.produtos.length) return e.lifetime.produtos;
+  return [];
+}
+
+function monthlyRevenue_(e, monthKey){
+  const daily = e.receita_diaria || {};
+  const diasDoMes = Object.keys(daily).filter(d => d.slice(0,7) === monthKey);
+  if(diasDoMes.length > 0){
+    let vendas = 0, faturamento = 0;
+    diasDoMes.forEach(d => { vendas += daily[d].vendas||0; faturamento += daily[d].faturamento||0; });
+    return {vendas, faturamento: Math.round(faturamento*100)/100, aproximado:false};
+  }
+  // sem dado granular (relatório BuyGoods) pra esse mês — cai pro sistema antigo de Ago×Set, se bater com o mês pedido
+  const anoAtual = new Date().getFullYear();
+  if(monthKey === anoAtual+'-08' && e.volume_ago!==null && e.volume_ago!==undefined){
+    return {vendas: null, faturamento: e.volume_ago, aproximado:true};
+  }
+  if(monthKey === anoAtual+'-09' && e.volume_set!==null && e.volume_set!==undefined){
+    return {vendas: null, faturamento: e.volume_set, aproximado:true};
+  }
+  return null; // sem nenhum dado (nem granular, nem a aproximação antiga) pra esse mês
+}
+
+function trendCell(e){
+  const ago = e.volume_ago, set = e.volume_set;
+  if(ago===null || ago===undefined || set===null || set===undefined){
+    return '<span class="row-sub">sem dado no período</span>';
+  }
+  let arrow = '', cls = 'trend-flat';
+  if(set > ago * 1.05){ arrow='▲'; cls='trend-up'; }
+  else if(set < ago * 0.95){ arrow='▼'; cls='trend-down'; }
+  else { arrow='–'; }
+  let line1 = `<span class="${cls}">${arrow}</span> Ago ${fmtMoney(ago)} → Set ${fmtMoney(set)}`;
+  let line2 = '';
+  if(e.tem_dado_custo && (e.net_ago!==null && e.net_ago!==undefined)){
+    line2 = `<br><span class="row-sub">Net: ${fmtMoney(e.net_ago)} → ${fmtMoney(e.net_set)}</span>`;
+  } else {
+    line2 = `<br><span class="row-sub">Net: sem dado de custo p/ este produto</span>`;
+  }
+  return `<div class="trend-cell">${line1}${line2}</div>`;
+}
+
+function ordenarContatos_(log){
+  // mais recente primeiro — por data da conversa, e criado_em como desempate quando duas entradas
+  // caem no mesmo dia (senão a ordem ficaria arbitrária entre elas)
+  return log.slice().sort((a,b) => {
+    const d = (b.data||'').localeCompare(a.data||'');
+    return d !== 0 ? d : (b.criado_em||'').localeCompare(a.criado_em||'');
+  });
+}
+function ultimoContato_(key){
+  const log = contactLog[key];
+  if(!log || !log.length) return null;
+  return ordenarContatos_(log)[0];
+}
+function contactLogCell(e){
+  const key = normName(e.nome);
+  const log = contactLog[key];
+  if(!log || !log.length) return '<span class="row-sub">—</span>';
+  const ultimo = ultimoContato_(key);
+  const atendenteTxt = ultimo.atendente ? ` · ${escapeHtml(ultimo.atendente)}` : '';
+  const countTxt = log.length > 1 ? ` <span class="row-sub">(+${log.length-1} anterior${log.length-1===1?'':'es'})</span>` : '';
+  return `<div class="contact-log"><b>${escapeHtml(ultimo.oferta)}</b> · ${escapeHtml(fmtDate_(ultimo.data))}${atendenteTxt}${countTxt}<br>${escapeHtml(ultimo.resumo||'')}</div>`;
+}
+function historicoContatoHtml_(key){
+  const log = ordenarContatos_(contactLog[key] || []);
+  if(!log.length) return '<span class="row-sub">Nenhum contato registrado ainda — este será o primeiro.</span>';
+  const itens = log.map(c => {
+    const atendenteTxt = c.atendente ? ` · ${escapeHtml(c.atendente)}` : '';
+    return `<div class="contact-log" style="margin-bottom:6px;"><b>${escapeHtml(c.oferta)}</b> · ${escapeHtml(fmtDate_(c.data))}${atendenteTxt}<br>${escapeHtml(c.resumo||'')}</div>`;
+  }).join('');
+  return `<label>Histórico de contatos (${log.length})</label><div style="max-height:180px; overflow-y:auto; border:1px solid var(--line); border-radius:6px; padding:8px 10px;">${itens}</div>`;
+}
+
+const PAGE_SIZE = 40;
+let currentPage = 1;
+let selectedMonth = '';
+let DATA = buildData();
+let currentList = DATA.slice();
+let semContatoAtivo = false; // true quando a aba "Sem contato na base" está selecionada
+
+function vendeuNoPeriodo_(e, dias, offsetDias){
+  const daily = (e.receita_diaria && Object.keys(e.receita_diaria).length) ? e.receita_diaria : (e.dados_diarios || {});
+  const hoje = new Date();
+  for(let i=offsetDias; i<offsetDias+dias; i++){
+    const d = new Date(hoje.getTime() - i*86400000);
+    const rec = daily[d.toISOString().slice(0,10)];
+    if(rec && ((rec.vendas||rec.orders||0) > 0)) return true;
+  }
+  return false;
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const tier = document.getElementById('tierFilter').value;
+  const contact = document.getElementById('contactFilter').value;
+  const ontemF = document.getElementById('ontemFilter').value;
+  const semanaF = document.getElementById('semanaFilter').value;
+  currentList = DATA.filter(e => {
+    if(q){
+      const hay = (e.nome+' '+(e.produtos||[]).join(' ')).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    if(tier && e.tier !== tier) return false;
+    if(contact === 'com' && !(e.telefone || e.telegram)) return false;
+    if(contact === 'sem' && (e.telefone || e.telegram)) return false;
+    // só a aba "Sem venda em 2026" esconde quem não tem contato por padrão (fica só na aba
+    // "Sem contato na base") — as outras urgências continuam mostrando todo mundo como antes
+    if(ontemF === 'sim' && !vendeuNoPeriodo_(e,1,1)) return false;
+    if(ontemF === 'nao' && vendeuNoPeriodo_(e,1,1)) return false;
+    if(semanaF === 'sim' && !vendeuNoPeriodo_(e,7,0)) return false;
+    if(semanaF === 'nao' && vendeuNoPeriodo_(e,7,0)) return false;
+    return true;
+  });
+  const sortBy = document.getElementById('sortFilter').value;
+  if(sortBy === 'streak_desc'){
+    currentList.sort((a,b) => (b.streak_diario||0) - (a.streak_diario||0));
+  } else if(sortBy === 'dias_desc'){
+    currentList.sort((a,b) => (b.dias_sem_vender ?? -1) - (a.dias_sem_vender ?? -1));
+  } else if(sortBy === 'faturamento_desc'){
+    currentList.sort((a,b) => {
+      const fa = selectedMonth ? monthlyRevenue_(a, selectedMonth) : null;
+      const fb = selectedMonth ? monthlyRevenue_(b, selectedMonth) : null;
+      return (fb ? fb.faturamento : -Infinity) - (fa ? fa.faturamento : -Infinity);
+    });
+  }
+  currentPage = 1;
+  renderTable();
+  renderStats(currentList);
+  updateNavCounts();
+  document.querySelectorAll('.nav-item[data-tier]').forEach(i => i.classList.toggle('active', !semContatoAtivo && i.dataset.tier === tier));
+  document.getElementById('navSemContato').classList.toggle('active', semContatoAtivo);
+  renderTopParadosCards();
+  renderVendasDia();
+}
+
+// ---------- Aba "Top parados em faturamento" ----------
+// Quem já vendeu de verdade (faturamento histórico ou volume confirmado) e agora tá em
+// atenção/crítico/sumido — ordenado do maior faturamento pro menor. "sem_venda_2026" fica de
+// fora de propósito: sem data de última venda não dá pra dizer que "parou", só que nunca vimos.
+function receitaHistorica_(e){
+  return (e.lifetime && e.lifetime.gross) || e.volume_total || 0;
+}
+function computeTopParados(){
+  return DATA
+    .filter(e => (e.tier==='atencao' || e.tier==='critico' || e.tier==='sumido')
+      && receitaHistorica_(e) > 0 && !isExcludedName(normName(e.nome)))
+    .sort((a,b) => receitaHistorica_(b) - receitaHistorica_(a))
+    .slice(0, 60);
+}
+function initials_(nome){
+  const parts = (nome||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '?';
+  return (parts[0][0] + (parts.length>1 ? parts[parts.length-1][0] : '')).toUpperCase();
+}
+function avatarColor_(nome){
+  const palette = ['#1F3864','#2F5597','#F26B1D','#8A6D00','#5A1E17'];
+  let h = 0;
+  for(const c of (nome||'')) h = (h*31 + c.charCodeAt(0)) % palette.length;
+  return palette[h];
+}
+let topParadosList = [];
+function renderTopParadosCards(){
+  const grid = document.getElementById('topParadosGrid');
+  if(!grid) return; // ainda não montou o DOM (chamada durante o load inicial)
+  topParadosList = computeTopParados();
+  const countEl = document.getElementById('topParadosCount');
+  if(countEl) countEl.textContent = `(${topParadosList.length} afiliado${topParadosList.length===1?'':'s'})`;
+  if(!topParadosList.length){
+    grid.innerHTML = `<div class="no-contact" style="padding:20px 0;">Ninguém com faturamento histórico parou de rodar no momento — ótimo sinal.</div>`;
+    return;
+  }
+  grid.innerHTML = topParadosList.map((e, idx) => {
+    const produtos = produtosFallback_(e).slice(0,2).join(', ') || '—';
+    return `<div class="top-card">
+      <div class="top-card-head">
+        <div class="avatar" style="background:${avatarColor_(e.nome)}">${initials_(e.nome)}</div>
+        <div class="top-card-name">
+          <span class="row-name" data-topdetail="${idx}">${escapeHtml(e.nome)}</span>
+          <div class="row-sub">${escapeHtml(produtos)}</div>
+        </div>
+        <span class="badge b-${e.tier}">${e.dias_sem_vender}d</span>
+      </div>
+      <div class="top-card-contact">${contactCell(e)}</div>
+      <div class="top-card-stats">
+        <div><span class="top-stat-label">Faturamento histórico</span><b>${fmtMoney(receitaHistorica_(e))}</b></div>
+        <div><span class="top-stat-label">Última venda</span><b>${escapeHtml(fmtDate_(e.ultima_venda)) || '—'}</b></div>
+      </div>
+      <div class="actions">
+        <button data-topscript="${idx}">Script</button>
+        <button data-toplog="${idx}">Registrar</button>
+      </div>
+      <div class="script-box" id="topscript_${idx}_box" style="display:none;"></div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('[data-topdetail]').forEach(el => {
+    el.addEventListener('click', () => openDetailModal(topParadosList[parseInt(el.dataset.topdetail)]));
+  });
+  grid.querySelectorAll('[data-toplog]').forEach(btn => {
+    btn.addEventListener('click', () => openContactModal(topParadosList[parseInt(btn.dataset.toplog)]));
+  });
+  grid.querySelectorAll('[data-topscript]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.topscript);
+      const entry = topParadosList[idx];
+      const box = document.getElementById(`topscript_${idx}_box`);
+      const open = box.style.display !== 'none';
+      if(open){ box.style.display = 'none'; return; }
+      const {offer, text} = buildScript(entry);
+      box.innerHTML = `<b>Sugestão (oferta: ${offer.nome} — ${offer.linha}):</b><br>${escapeHtml(text)}
+        <div class="script-btns"><button class="copy-this">Copiar script</button><button class="regen">Gerar outra oferta</button></div>`;
+      box.querySelector('.copy-this').addEventListener('click', () => { copyText(text); showToast('Script copiado!'); });
+      box.querySelector('.regen').addEventListener('click', () => {
+        const others = OFFERS.filter(o => o.nome !== offer.nome);
+        const newOffer = others[Math.floor(Math.random()*others.length)];
+        const newText = scriptText_(entry, newOffer);
+        box.innerHTML = `<b>Sugestão (oferta: ${newOffer.nome} — ${newOffer.linha}):</b><br>${escapeHtml(newText)}
+          <div class="script-btns"><button class="copy-this2">Copiar script</button></div>`;
+        box.querySelector('.copy-this2').addEventListener('click', () => { copyText(newText); showToast('Script copiado!'); });
+      });
+      box.style.display = 'block';
+    });
+  });
+}
+
+function renderTable(){
+  const start = (currentPage-1)*PAGE_SIZE;
+  const pageItems = currentList.slice(start, start+PAGE_SIZE);
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = pageItems.map((e, i) => {
+    const idx = start+i;
+    const rowId = 'row_'+idx;
+    const mrev = selectedMonth ? monthlyRevenue_(e, selectedMonth) : null;
+    let faturamentoCell;
+    if(mrev){
+      faturamentoCell = `<span class="vol">${mrev.aproximado?'≈ ':''}${fmtMoney(mrev.faturamento)}</span><br><span class="row-sub">${mrev.aproximado ? 'aprox. (sem relatório BuyGoods desse mês)' : mrev.vendas+' venda'+(mrev.vendas===1?'':'s')}</span>`;
+    } else if(e.ultima_venda && e.ultima_venda.slice(0,7) === selectedMonth){
+      // sabemos a data da venda (veio da base de contato), mas nenhum relatório diário do
+      // BuyGoods trouxe esse dia ainda pra dar o valor em $ — não é "sem dado no mês", é
+      // "sem confirmação do valor", que é uma coisa diferente de vender em outro mês
+      faturamentoCell = `<span class="row-sub">sem valor confirmado<br>(venda em ${escapeHtml(fmtDate_(e.ultima_venda))} sem relatório BuyGoods desse dia)</span>`;
+    } else {
+      const vendaMes = e.ultima_venda ? e.ultima_venda.slice(0,7) : null;
+      const foraDoMes = vendaMes && vendaMes !== selectedMonth;
+      faturamentoCell = `<span class="row-sub">sem dado no mês${foraDoMes ? ' (última venda em '+escapeHtml(fmtDate_(e.ultima_venda))+')' : ''}</span>`;
+    }
+    return `
+    <tr>
+      <td style="border-left:4px solid ${tierColor_(e.tier)}"><span class="row-name" data-detail="${idx}">${escapeHtml(e.nome)}</span><br><span class="row-sub">${e.ultima_venda ? 'última venda '+escapeHtml(fmtDate_(e.ultima_venda)) : 'sem venda registrada'}</span></td>
+      <td class="row-sub">${escapeHtml(produtosFallback_(e).join(', ')) || '—'}</td>
+      <td>${faturamentoCell}</td>
+      <td><span class="badge b-${e.tier}">${e.dias_sem_vender!==null && e.dias_sem_vender!==undefined ? e.dias_sem_vender+'d' : 'sem dado'}</span>${pctBadge_(e)}</td>
+      <td>${contactCell(e)}</td>
+      <td class="actions">
+        <button data-script="${rowId}">Script</button>
+        <button data-logbtn="${idx}">Registrar</button>
+        ${(e.fontes_planilha||[]).includes('adicionado manualmente') ? `<button class="danger" data-delbtn="${idx}">Excluir</button>` : ''}
+      </td>
+    </tr>
+    <tr class="script-row" id="${rowId}"><td colspan="6"><div class="script-box" id="${rowId}_box"></div></td></tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('button[data-script]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.script;
+      const row = document.getElementById(id);
+      const idx = parseInt(id.split('_')[1]);
+      const entry = currentList[idx];
+      const box = document.getElementById(id+'_box');
+      if(!row.classList.contains('open')){
+        const {offer, text} = buildScript(entry);
+        box.innerHTML = `<b>Sugestão (oferta: ${offer.nome} — ${offer.linha}):</b><br>${escapeHtml(text)}
+          <div class="script-btns"><button class="copy-this">Copiar script</button><button class="regen">Gerar outra oferta</button></div>`;
+        box.querySelector('.copy-this').addEventListener('click', () => { copyText(text); showToast('Script copiado!'); });
+        box.querySelector('.regen').addEventListener('click', () => {
+          const others = OFFERS.filter(o => o.nome !== offer.nome);
+          const newOffer = others[Math.floor(Math.random()*others.length)];
+          const newText = scriptText_(entry, newOffer);
+          box.innerHTML = `<b>Sugestão (oferta: ${newOffer.nome} — ${newOffer.linha}):</b><br>${escapeHtml(newText)}
+            <div class="script-btns"><button class="copy-this2">Copiar script</button></div>`;
+          box.querySelector('.copy-this2').addEventListener('click', () => { copyText(newText); showToast('Script copiado!'); });
+        });
+        row.classList.add('open');
+      } else { row.classList.remove('open'); }
+    });
+  });
+
+  tbody.querySelectorAll('button[data-logbtn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.logbtn);
+      openContactModal(currentList[idx]);
+    });
+  });
+
+  tbody.querySelectorAll('button[data-delbtn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.delbtn);
+      deleteAffiliate(currentList[idx]);
+    });
+  });
+
+  tbody.querySelectorAll('.row-name[data-detail]').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.detail);
+      openDetailModal(currentList[idx]);
+    });
+  });
+
+  renderPager();
+}
+
+function renderPager(){
+  const totalPages = Math.max(1, Math.ceil(currentList.length/PAGE_SIZE));
+  const pager = document.getElementById('pager');
+  let html = `<button ${currentPage===1?'disabled':''} id="prevPage">← Anterior</button>`;
+  html += `<span style="align-self:center; font-size:12px; color:#5B6472;">Página ${currentPage} de ${totalPages} (${currentList.length} afiliados)</span>`;
+  html += `<button ${currentPage===totalPages?'disabled':''} id="nextPage">Próxima →</button>`;
+  pager.innerHTML = html;
+  const prev = document.getElementById('prevPage');
+  const next = document.getElementById('nextPage');
+  if(prev) prev.addEventListener('click', () => { currentPage--; renderTable(); });
+  if(next) next.addEventListener('click', () => { currentPage++; renderTable(); });
+}
+
+function copyText(t){
+  navigator.clipboard.writeText(t).catch(()=>{
+    const ta = document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  });
+}
+function showToast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+function applyThemeUI_(theme){
+  document.getElementById('themeToggleIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('themeToggleLabel').textContent = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
+}
+applyThemeUI_(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  if(next === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  else document.documentElement.removeAttribute('data-theme');
+  try { localStorage.setItem('top_theme_v1', next); } catch(e){}
+  applyThemeUI_(next);
+});
+
+document.querySelectorAll('#mainViewTabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#mainViewTabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const view = btn.dataset.view;
+    document.getElementById('viewTabela').style.display = view==='tabela' ? '' : 'none';
+    document.getElementById('viewTopParados').style.display = view==='topparados' ? '' : 'none';
+    if(view === 'topparados') renderTopParadosCards();
+  });
+});
+
+document.getElementById('searchBox').addEventListener('input', applyFilters);
+document.getElementById('tierFilter').addEventListener('change', applyFilters);
+document.getElementById('contactFilter').addEventListener('change', applyFilters);
+document.getElementById('ontemFilter').addEventListener('change', applyFilters);
+document.getElementById('semanaFilter').addEventListener('change', applyFilters);
+document.getElementById('sortFilter').addEventListener('change', applyFilters);
+document.getElementById('monthFilter').addEventListener('change', () => {
+  selectedMonth = document.getElementById('monthFilter').value;
+  renderTable();
+});
+
+document.getElementById('copySheetsBtn').addEventListener('click', () => {
+  const header = ['Nome','Confirmado (Orders_2026)','Produtos','Volume Historico','Volume Ago','Volume Set','Net Ago','Net Set','Ultima Venda','Dias Sem Vender','Tier','Telefone','Conf. Telefone','Telegram','Conf. Telegram','Status Planilha','Ultimo Contato Registrado'];
+  const lines = [header.join('\t')];
+  currentList.forEach(e => {
+    const log = ultimoContato_(normName(e.nome));
+    const logTxt = log ? `${log.oferta} (${log.data}): ${log.resumo||''}` : '';
+    lines.push([
+      e.nome, e.confirmado?'sim':'nao', (e.produtos||[]).join('; '),
+      (e.volume_total||0).toFixed(2),
+      e.volume_ago!==null&&e.volume_ago!==undefined?e.volume_ago.toFixed(2):'',
+      e.volume_set!==null&&e.volume_set!==undefined?e.volume_set.toFixed(2):'',
+      e.net_ago!==null&&e.net_ago!==undefined?e.net_ago.toFixed(2):'',
+      e.net_set!==null&&e.net_set!==undefined?e.net_set.toFixed(2):'',
+      e.ultima_venda||'', e.dias_sem_vender!==null&&e.dias_sem_vender!==undefined?e.dias_sem_vender:'', e.tier,
+      e.telefone||'', e.conf_telefone||'', e.telegram||'', e.conf_telegram||'', e.status_planilha||'', logTxt
+    ].join('\t'));
+  });
+  copyText(lines.join('\n'));
+  showToast(`${currentList.length} linhas copiadas — cole direto no Sheets`);
+});
+
+// ---------- Modal: Inserir afiliado ----------
+const addModalBg = document.getElementById('addModalBg');
+document.getElementById('addAffiliateBtn').addEventListener('click', () => addModalBg.classList.add('show'));
+document.getElementById('mCancel').addEventListener('click', () => addModalBg.classList.remove('show'));
+document.getElementById('mSave').addEventListener('click', async () => {
+  const nome = document.getElementById('mNome').value.trim();
+  if(!nome){ alert('Preencha ao menos o nome.'); return; }
+  const tel = document.getElementById('mTel').value.trim();
+  const digits = tel.replace(/\D/g,'');
+  const tg = document.getElementById('mTg').value.trim();
+  const obs = document.getElementById('mObs').value.trim();
+  const produto = document.getElementById('mProduto').value.trim();
+  const nomeDash = document.getElementById('mNomeDash').value.trim();
+  const trafego = document.getElementById('mTrafego').value;
+  const cpa = document.getElementById('mCpa').value.trim();
+  const buygoods = document.getElementById('mBuygoods').value.trim();
+  const atendente = document.getElementById('mAtendente').value;
+  const novo = {
+    nome,
+    telefone: tel || null,
+    tel_digits: digits ? (digits.length<=11 && !digits.startsWith('55') ? '55'+digits : digits) : null,
+    conf_telefone: tel ? 'alta' : null,
+    telegram: tg || null,
+    tg_user: tg ? tg.replace('@','') : null,
+    conf_telegram: tg ? 'alta' : null,
+    status_planilha: obs || 'adicionado manualmente na ferramenta',
+    produto_planilha: produto || null,
+    fontes_planilha: ['adicionado manualmente'],
+    confirmado: false, produtos: [], total_pedidos: 0, volume_total: 0,
+    ultima_venda: null, dias_sem_vender: null, tier: 'sem_venda_2026',
+    volume_ago: null, volume_set: null, net_ago: null, net_set: null, tem_dado_custo: false,
+    spark: [0,0,0,0,0,0,0,0]
+  };
+  addedAffiliates.push(novo);
+  saveLS(LS_ADDED, addedAffiliates);
+  const hasMeta = nomeDash || trafego || cpa || buygoods || atendente;
+  if(hasMeta){
+    affiliateMeta[normName(nome)] = {nome_dash: nomeDash, trafego, cpa, buygoods_user: buygoods, atendente};
+    saveLS(LS_META, affiliateMeta);
+  }
+  DATA = buildData();
+  addModalBg.classList.remove('show');
+  ['mNome','mTel','mTg','mProduto','mObs','mNomeDash','mTrafego','mCpa','mBuygoods','mAtendente'].forEach(id => document.getElementById(id).value = '');
+  applyFilters();
+  showToast(APPS_SCRIPT_URL ? 'Afiliado adicionado — sincronizando...' : 'Afiliado adicionado (salvo neste navegador)');
+  const res = await apiPost('addAffiliate', {nome, telefone: tel, telegram: tg, produto_planilha: produto, observacao: obs});
+  let metaOk = true;
+  if(hasMeta){
+    const metaRes = await apiPost('saveAffiliateMeta', {nome, nome_dash: nomeDash, trafego, cpa, buygoods_user: buygoods, atendente});
+    metaOk = !!(metaRes && metaRes.ok);
+  }
+  if(res && res.ok && metaOk){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
+  else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou — ficou salvo só neste navegador por enquanto'); }
+  renderSyncBadge();
+});
+
+async function deleteAffiliate(entry){
+  if(!confirm(`Excluir "${entry.nome}"? Essa ação remove o afiliado inserido manualmente (e some da planilha, se estiver sincronizando).`)) return;
+  const key = normName(entry.nome);
+  addedAffiliates = addedAffiliates.filter(a => normName(a.nome) !== key);
+  saveLS(LS_ADDED, addedAffiliates);
+  DATA = buildData();
+  applyFilters();
+  showToast(APPS_SCRIPT_URL ? 'Afiliado excluído — sincronizando...' : 'Afiliado excluído (salvo neste navegador)');
+  const res = await apiPost('deleteAffiliate', {nome: entry.nome});
+  if(res && res.ok){ syncStatus='ok'; showToast('Exclusão sincronizada ✓'); }
+  else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou a exclusão — pode voltar a aparecer até corrigir o Apps Script'); }
+  renderSyncBadge();
+}
+
+// ---------- Modal: Registrar contato ----------
+const contactModalBg = document.getElementById('contactModalBg');
+let contactModalTarget = null;
+function openContactModal(entry){
+  contactModalTarget = entry;
+  document.getElementById('contactModalName').textContent = 'Afiliado: ' + entry.nome;
+  const sel = document.getElementById('cOferta');
+  sel.innerHTML = OFFERS.map(o => `<option value="${o.nome}">${o.nome} (${o.linha})</option>`).join('') + '<option value="Outro">Outro / não listado</option>';
+  document.getElementById('cHistorico').innerHTML = historicoContatoHtml_(normName(entry.nome));
+  // sempre um registro novo — o histórico acima mostra o que já foi registrado antes, sem apagar nada
+  document.getElementById('cResumo').value = '';
+  document.getElementById('cData').value = new Date().toISOString().slice(0,10);
+  document.getElementById('cAtendente').value = '';
+  sel.value = sel.options[0] ? sel.options[0].value : '';
+  contactModalBg.classList.add('show');
+}
+document.getElementById('cCancel').addEventListener('click', () => contactModalBg.classList.remove('show'));
+document.getElementById('cSave').addEventListener('click', async () => {
+  if(!contactModalTarget) return;
+  const key = normName(contactModalTarget.nome);
+  const oferta = document.getElementById('cOferta').value;
+  const resumo = document.getElementById('cResumo').value.trim();
+  const data = document.getElementById('cData').value || new Date().toISOString().slice(0,10);
+  const atendente = document.getElementById('cAtendente').value;
+  if(!contactLog[key]) contactLog[key] = [];
+  contactLog[key].push({oferta, resumo, data, atendente, criado_em: new Date().toISOString()});
+  saveLS(LS_CONTACTS, contactLog);
+  contactModalBg.classList.remove('show');
+  renderTable();
+  showToast(APPS_SCRIPT_URL ? 'Registrado — sincronizando...' : 'Contato registrado (salvo neste navegador)');
+  const res = await apiPost('logContact', {nome: contactModalTarget.nome, historico_json: JSON.stringify(contactLog[key])});
+  if(res && res.ok){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
+  else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou — ficou salvo só neste navegador por enquanto'); }
+  renderSyncBadge();
+});
+
+// ---------- Modal: Detalhes do afiliado (análise + dados de contato extra) ----------
+const detailModalBg = document.getElementById('detailModalBg');
+let detailTarget = null;
+let detailPeriod = 'mes';
+
+function openDetailModal(entry){
+  detailTarget = entry;
+  detailPeriod = 'mes';
+  document.getElementById('detailName').textContent = entry.nome;
+  const produtos = produtosFallback_(entry).join(', ') || (entry.produto_planilha || '—');
+  const statusVenda = entry.confirmado
+    ? `confirmado · ${entry.total_pedidos||0}× · ${fmtMoney(entry.volume_total||0)} histórico`
+    : 'sem venda confirmada em 2026';
+  const streakTxt = (entry.streak_diario||0) >= 2 ? ` · ${entry.streak_diario} dias seguidos vendendo` : '';
+  document.getElementById('detailSub').textContent = `${produtos} — ${statusVenda}${streakTxt}`;
+  document.getElementById('detailTrend').innerHTML = trendCell(entry);
+  document.getElementById('detailContactLog').innerHTML = historicoContatoHtml_(normName(entry.nome));
+  const life = entry.lifetime;
+  document.getElementById('detailLifetime').innerHTML = life
+    ? `<label>Histórico geral (desde jan/2025, base BuyGoods)</label><div class="row-sub">${life.orders} pedido${life.orders===1?'':'s'} · ${fmtMoney(life.gross)} bruto · ${fmtMoney(life.net)} líquido${life.refunds?' · '+fmtMoney(life.refunds)+' em reembolso/chargeback':''}</div>`
+    : '';
+
+  const key = normName(entry.nome);
+  const meta = affiliateMeta[key] || {};
+  document.getElementById('dTelefone').value = entry.telefone || '';
+  document.getElementById('dTelegram').value = entry.telegram || '';
+  document.getElementById('dNomeDash').value = meta.nome_dash || '';
+  document.getElementById('dTrafego').value = meta.trafego || '';
+  document.getElementById('dCpa').value = meta.cpa || '';
+  document.getElementById('dBuygoods').value = meta.buygoods_user || '';
+  document.getElementById('dAtendente').value = meta.atendente || '';
+
+  document.querySelectorAll('#periodTabs button').forEach(b => b.classList.toggle('active', b.dataset.period === detailPeriod));
+  renderDetailChart(entry, detailPeriod);
+  detailModalBg.classList.add('show');
+}
+document.getElementById('dClose').addEventListener('click', () => detailModalBg.classList.remove('show'));
+
+document.querySelectorAll('#periodTabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    detailPeriod = btn.dataset.period;
+    document.querySelectorAll('#periodTabs button').forEach(b => b.classList.toggle('active', b===btn));
+    renderDetailChart(detailTarget, detailPeriod);
+  });
+});
+
+document.getElementById('dSaveMeta').addEventListener('click', async () => {
+  if(!detailTarget) return;
+  const key = normName(detailTarget.nome);
+  const meta = {
+    telefone: document.getElementById('dTelefone').value.trim(),
+    telegram: document.getElementById('dTelegram').value.trim(),
+    nome_dash: document.getElementById('dNomeDash').value.trim(),
+    trafego: document.getElementById('dTrafego').value,
+    cpa: document.getElementById('dCpa').value.trim(),
+    buygoods_user: document.getElementById('dBuygoods').value.trim(),
+    atendente: document.getElementById('dAtendente').value
+  };
+  affiliateMeta[key] = meta;
+  saveLS(LS_META, affiliateMeta);
+  DATA = buildData();
+  applyFilters();
+  showToast(APPS_SCRIPT_URL ? 'Dados salvos — sincronizando...' : 'Dados salvos (neste navegador)');
+  const res = await apiPost('saveAffiliateMeta', Object.assign({nome: detailTarget.nome}, meta));
+  if(res && res.ok){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
+  else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou — ficou salvo só neste navegador por enquanto'); }
+  renderSyncBadge();
+});
+
+function renderDetailChart(entry, period){
+  const box = document.getElementById('detailChartBox');
+  const sub = document.getElementById('detailAnalysisSub');
+  const receita = entry.receita_diaria || {};
+  const usingReceita = Object.keys(receita).length > 0;
+  // normaliza pro mesmo formato {orders, volume} independente da fonte (faturamento real tem prioridade)
+  const daily = {};
+  if(usingReceita){
+    Object.keys(receita).forEach(d => { daily[d] = {orders: receita[d].vendas||0, volume: receita[d].faturamento||0}; });
+  } else {
+    Object.assign(daily, entry.dados_diarios || {});
+  }
+  const keys = Object.keys(daily);
+  if(keys.length === 0){
+    sub.textContent = '';
+    box.innerHTML = '<div class="chart-empty">Sem dados diários pra esse afiliado ainda — importe o arquivo de pedidos ou de faturamento do dia pra ver o histórico aqui.</div>';
+    return;
+  }
+
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const yestStr = new Date(now.getTime()-86400000).toISOString().slice(0,10);
+
+  if(period === 'hoje' || period === 'ontem'){
+    const dstr = period === 'hoje' ? todayStr : yestStr;
+    const rec = daily[dstr];
+    sub.textContent = period === 'hoje' ? 'Vendas de hoje' : 'Vendas de ontem';
+    box.innerHTML = rec
+      ? `<div class="chart-summary">${rec.orders} pedido${rec.orders===1?'':'s'} · <b>${fmtMoney(rec.volume)}</b></div>`
+      : `<div class="chart-empty">Sem vendas ${period === 'hoje' ? 'hoje' : 'ontem'}.</div>`;
+    return;
+  }
+
+  let buckets = [];
+  if(period === 'mes'){
+    const y = now.getFullYear(), m = now.getMonth();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    for(let d=1; d<=daysInMonth; d++){
+      const dstr = new Date(y,m,d).toISOString().slice(0,10);
+      const rec = daily[dstr];
+      buckets.push({label: String(d), orders: rec?rec.orders:0, volume: rec?rec.volume:0});
+    }
+    sub.textContent = now.toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+  } else {
+    const byMonth = {};
+    keys.forEach(k => {
+      if(period === 'ano' && k.slice(0,4) !== String(now.getFullYear())) return;
+      const mk = k.slice(0,7);
+      if(!byMonth[mk]) byMonth[mk] = {orders:0, volume:0};
+      byMonth[mk].orders += daily[k].orders;
+      byMonth[mk].volume += daily[k].volume;
+    });
+    const monthNames = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    buckets = Object.keys(byMonth).sort().map(mk => {
+      const [y,m] = mk.split('-');
+      return {label: monthNames[parseInt(m)-1]+'/'+y.slice(2), orders: byMonth[mk].orders, volume: byMonth[mk].volume};
+    });
+    sub.textContent = period === 'ano' ? ('Ano de '+now.getFullYear()) : 'Todo o histórico disponível nesta importação';
+  }
+
+  const totalOrders = buckets.reduce((s,b)=>s+b.orders,0);
+  const totalVolume = buckets.reduce((s,b)=>s+b.volume,0);
+  if(totalOrders === 0){
+    box.innerHTML = '<div class="chart-empty">Sem vendas no período selecionado.</div>';
+    return;
+  }
+  const max = Math.max(...buckets.map(b=>b.volume), 1);
+  const barsHtml = buckets.map(b => `<div class="bar-col"><div class="bar ${b.volume===0?'zero':''}" style="height:${Math.max(2,(b.volume/max)*100)}%" title="${escapeHtml(b.label)}: ${b.orders} pedido(s), ${fmtMoney(b.volume)}"></div></div>`).join('');
+  const labelsHtml = buckets.map(b => `<span>${escapeHtml(b.label)}</span>`).join('');
+  box.innerHTML = `
+    <div class="chart-summary">${totalOrders} pedido${totalOrders===1?'':'s'} no período · <b>${fmtMoney(totalVolume)}</b></div>
+    <div class="chart-bars">${barsHtml}</div>
+    <div class="chart-labels">${labelsHtml}</div>`;
+}
+
+// ---------- Importar exportação diária (PEDIDOS_AAAA-MM-DD.xlsx) ----------
+const EXCLUDE_PATTERNS = ['helpgrid','maxweb','mwe','tiger offers','jose moraes','gestor','full negocios'];
+function isExcludedName(n){
+  if(!n) return true;
+  return EXCLUDE_PATTERNS.some(p => n.includes(p));
+}
+
+// Contas internas que ficam de fora do ranking de afiliados (acima) mas têm sua própria visão de
+// vendas na lateral — "n" já chega normalizado (normName: minúsculo, sem acento, espaços colapsados).
+const CANAL_DEFS = [
+  {key:'helpgrid', label:'Helpgrid', match:n => n.includes('helpgrid'),
+   nota:'Líquido aqui = nossa parte de verdade: 52% do Net Líquido (depois de COGS 10%, reembolso/chargeback, comissão e imposto). Os outros 48% ficam com a Helpgrid, não entram nesse número.'},
+  {key:'welcome_salesbound', label:'Welcome · Sales Bound', match:n => n.replace(/\s+/g,'').includes('salesbound'),
+   nota:'Líquido aqui = nossa parte de verdade: (Bruto − Reembolso − COGS 10%) × 55%. Os outros 45% ficam com a Sales Bound, não entram nesse número.'},
+  {key:'welcome_isellforu', label:'Welcome · iSellForU', match:n => n.replace(/\s+/g,'').includes('isellforu')},
+  {key:'gestor5', label:'Email (Gestor 5)', match:n => n.includes('gestor') && n.includes('five')},
+  {key:'gestor3', label:'SMS (Gestor 3)', match:n => n.includes('gestor') && n.includes('three')}
+];
+function canalDoNome_(nomeNorm){
+  if(!nomeNorm) return null;
+  const def = CANAL_DEFS.find(c => c.match(nomeNorm));
+  return def ? def.key : null;
+}
+function netOf_(v){
+  if(!v) return null;
+  return (v.gross||0) - (v.refund||0) - (v.chargeback||0) - (v.shipping||0) - (v.taxes||0);
+}
+// "Vendas por dia" (e as abas de canal) contam pedido frontal, não upsell/downsell/frete — o
+// relatório BuyGoods não tem uma coluna "FT" própria, mas o Product Codename segue um padrão
+// confiável: upsell tem "up1/up2/up3", downsell tem "dw1/dw2", frete é "ship"/"shi" sozinho — o
+// resto (mesmo sem a palavra "front" no nome) é o produto frontal em si.
+function isFrontal_(row, hidx){
+  if(!('Product Codename' in hidx)) return true; // relatório sem essa coluna — conta como antes
+  const code = String(row[hidx['Product Codename']] || '').trim().toLowerCase();
+  if(!code) return true;
+  if(/^shi/.test(code)) return false;
+  if(/up\d/.test(code)) return false;
+  if(/dw\d/.test(code)) return false;
+  return true;
+}
+function acumulaValor_(acc, actionType, row, hidx){
+  if(actionType === 'neworder'){
+    acc.gross += parseFloat(row[hidx['Gross']]) || 0;
+    if('Shipping Cost' in hidx) acc.shipping += parseFloat(row[hidx['Shipping Cost']]) || 0;
+    if('Taxes' in hidx) acc.taxes += parseFloat(row[hidx['Taxes']]) || 0;
+  } else if(actionType === 'refund'){
+    acc.refund += parseFloat(row[hidx['Refund Amount']]) || 0;
+  } else if(actionType === 'chargeback'){
+    acc.chargeback += parseFloat(row[hidx['Chargeback Amount']]) || 0;
+  }
+}
+
+document.getElementById('buyGoodsImportFile').addEventListener('change', (ev) => {
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'binary', cellDates:false});
+      processBuyGoodsImport(wb, file.name);
+    } catch(err){
+      console.error(err);
+      alert('Não consegui ler esse arquivo. Confira se é o Relatorio_BuyGoods_AAAA-MM-DD.xlsx igual ao que chega por e-mail (uma aba por produto).');
+    }
+  };
+  reader.readAsBinaryString(file);
+  ev.target.value = '';
+});
+
+// processMasterAffiliatesImport() e processContactsImport() (mais abaixo) não têm mais botão
+// na tela — a base histórica e os contatos de Telegram já foram importados pra produção.
+// As funções ficam aqui prontas caso precise rodar de novo algum dia (basta re-adicionar
+// um <input type=file> com esses ids e um listener chamando a função correspondente).
+
+function limparValorContato_(v){
+  if(v===null || v===undefined) return '';
+  const s = String(v).trim();
+  if(!s || s.toLowerCase()==='x') return '';
+  return s;
+}
+
+function processContactsImport(wb, filename){
+  const results = {}; // nome_norm -> {nome, telefone, telegram}
+
+  wb.SheetNames.forEach(sheetName => {
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+    if(!rows.length) return;
+    const header = rows[0].map(h => h ? String(h).trim().toLowerCase() : '');
+    const nomeIdx = header.indexOf('nome');
+    if(nomeIdx === -1) return; // aba sem coluna "nome" reconhecível (ex: "Novos Candidatos (Telegram)")
+    const telIdx = header.indexOf('telefone');
+    const tgIdx = header.findIndex(h => h.indexOf('user') !== -1 || h.indexOf('telegram') !== -1);
+
+    for(let i=1; i<rows.length; i++){
+      const row = rows[i];
+      if(!row) continue;
+      const nomeRaw = row[nomeIdx];
+      if(!nomeRaw) continue;
+      const nome = String(nomeRaw).trim();
+      const nkey = normName(nome);
+      if(!nkey || isExcludedName(nkey)) continue;
+
+      const telefone = telIdx!==-1 ? limparValorContato_(row[telIdx]) : '';
+      let telegram = tgIdx!==-1 ? limparValorContato_(row[tgIdx]) : '';
+      if(telegram.indexOf('t.me/') !== -1) telegram = '@' + telegram.split('t.me/')[1].replace(/\/+$/,'');
+      else if(telegram && !telegram.startsWith('@') && !telegram.startsWith('http')) telegram = '@'+telegram;
+
+      if(!telefone && !telegram) continue;
+      if(!results[nkey]) results[nkey] = {nome, telefone:'', telegram:''};
+      if(telefone) results[nkey].telefone = telefone;
+      if(telegram) results[nkey].telegram = telegram;
+    }
+  });
+
+  const keys = Object.keys(results);
+  if(keys.length === 0){ alert('Não encontrei nenhum contato novo (telefone/telegram) nesse arquivo.'); return; }
+  if(!confirm(`Encontrei ${keys.length} afiliados com telefone e/ou telegram nesse arquivo. Isso atualiza (ou preenche, se não tinha) o contato deles na ferramenta. Confirmar?`)) return;
+
+  keys.forEach(key => {
+    const r = results[key];
+    const cur = affiliateMeta[key] || {};
+    affiliateMeta[key] = {
+      nome_dash: cur.nome_dash || '', trafego: cur.trafego || '', cpa: cur.cpa || '', buygoods_user: cur.buygoods_user || '',
+      telefone: r.telefone || cur.telefone || '',
+      telegram: r.telegram || cur.telegram || ''
+    };
+  });
+  saveLS(LS_META, affiliateMeta);
+  DATA = buildData();
+  applyFilters();
+  showToast(`Contatos atualizados: ${keys.length} afiliados` + (APPS_SCRIPT_URL ? ' — sincronizando...' : ' (salvo neste navegador)'));
+
+  if(APPS_SCRIPT_URL){
+    const batch = keys.map(key => Object.assign({nome_norm: key, nome: results[key].nome}, affiliateMeta[key]));
+    apiPost('importContactsBatch', batch).then(res => {
+      if(res && res.ok){ syncStatus='ok'; showToast(`Contatos sincronizados: ${res.processed} afiliados ✓`); }
+      else { syncStatus='erro'; showToast('Contatos salvos localmente, mas não sincronizaram com o Sheets ainda'); }
+      renderSyncBadge();
+    });
+  }
+}
+
+function processMasterAffiliatesImport(wb, filename){
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+
+  let hpos = -1;
+  for(let i=0; i<rows.length; i++){
+    if(rows[i] && rows[i][0]==='Account' && rows[i][1]==='Affiliate'){ hpos = i; break; }
+  }
+  if(hpos === -1){
+    alert('Não encontrei o cabeçalho esperado (Account, Affiliate) — confira se é o arquivo Master Affiliates certo.');
+    return;
+  }
+  const header = rows[hpos];
+  const hidx = {};
+  header.forEach((h,i) => hidx[h] = i);
+  const need = ['Account','Affiliate','Orders (FE+BE)','Gross Sales','Net Sales','Commissions Net','Total CBs & Refunds'];
+  if(!need.every(h => h in hidx)){
+    alert('Faltam colunas esperadas nesse arquivo — confira se é o Master Affiliates certo.');
+    return;
+  }
+
+  const byAff = {}; // nome_norm -> {nome, produtos:Set, orders, gross, net, commissions, refunds}
+  for(let i=hpos+1; i<rows.length; i++){
+    const row = rows[i];
+    if(!row) continue;
+    const account = row[hidx['Account']];
+    const nome = row[hidx['Affiliate']];
+    if(!nome || account === 'Total') continue;
+    const nkey = normName(nome);
+    if(!nkey || isExcludedName(nkey)) continue;
+    const orders = Number(row[hidx['Orders (FE+BE)']]) || 0;
+    if(!byAff[nkey]) byAff[nkey] = {nome, produtos:new Set(), orders:0, gross:0, net:0, commissions:0, refunds:0};
+    const rec = byAff[nkey];
+    rec.orders += orders;
+    rec.gross += Number(row[hidx['Gross Sales']]) || 0;
+    rec.net += Number(row[hidx['Net Sales']]) || 0;
+    rec.commissions += Number(row[hidx['Commissions Net']]) || 0;
+    rec.refunds += Number(row[hidx['Total CBs & Refunds']]) || 0;
+    if(orders > 0 && account) rec.produtos.add(account);
+  }
+
+  const totalAfiliados = Object.keys(byAff).length;
+  const keys = Object.keys(byAff).filter(k => byAff[k].orders > 0);
+  if(!confirm(`Encontrei ${totalAfiliados} afiliados no arquivo, ${keys.length} com pelo menos 1 pedido. Só esses ${keys.length} vão entrar na ferramenta (com histórico geral, sem data). Isso substitui qualquer base histórica importada antes. Confirmar?`)) return;
+
+  lifetimeStats = {};
+  keys.forEach(key => {
+    const rec = byAff[key];
+    lifetimeStats[key] = {
+      nome: rec.nome,
+      produtos: Array.from(rec.produtos),
+      orders: rec.orders,
+      gross: Math.round(rec.gross*100)/100,
+      net: Math.round(rec.net*100)/100,
+      commissions: Math.round(rec.commissions*100)/100,
+      refunds: Math.round(rec.refunds*100)/100
+    };
+  });
+  saveLS(LS_LIFETIME, lifetimeStats);
+  DATA = buildData();
+  applyFilters();
+  showToast(`Base histórica importada: ${keys.length} afiliados com pedidos` + (APPS_SCRIPT_URL ? ' — sincronizando...' : ' (salvo neste navegador)'));
+
+  if(APPS_SCRIPT_URL){
+    const batch = keys.map(key => Object.assign({nome_norm: key}, lifetimeStats[key], {produtos: lifetimeStats[key].produtos.join(', ')}));
+    apiPost('importLifetimeBatch', batch).then(res => {
+      if(res && res.ok){ syncStatus='ok'; showToast(`Base histórica sincronizada: ${res.processed} afiliados ✓`); }
+      else { syncStatus='erro'; showToast('Base histórica salva localmente, mas não sincronizou com o Sheets ainda'); }
+      renderSyncBadge();
+    });
+  }
+}
+
+function streakDiario_(daily, lastSale){
+  if(!lastSale) return 0;
+  let streak = 0;
+  const cursor = new Date(lastSale.getTime());
+  while(daily[cursor.toISOString().slice(0,10)]){
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return streak;
+}
+
+function applyContactOverride_(e){
+  const meta = affiliateMeta[normName(e.nome)];
+  if(!meta) return;
+  if(meta.telefone){
+    e.telefone = meta.telefone;
+    const digits = String(meta.telefone).replace(/\D/g,'');
+    e.tel_digits = digits ? (digits.length<=11 && !digits.startsWith('55') ? '55'+digits : digits) : null;
+    e.conf_telefone = 'alta';
+  }
+  if(meta.telegram){
+    e.telegram = meta.telegram;
+    e.tg_user = meta.telegram.replace('@','');
+    e.conf_telegram = 'alta';
+  }
+}
+
+function recalcTierFromLastSale_(ultimaVendaStr){
+  if(!ultimaVendaStr) return {dias:null, tier:'sem_venda_2026'};
+  const dias = Math.floor((new Date() - new Date(ultimaVendaStr))/86400000);
+  let tier = 'ativo';
+  if(dias > 15) tier = 'sumido';
+  else if(dias > 7) tier = 'critico';
+  else if(dias > 2) tier = 'atencao';
+  return {dias, tier};
+}
+
+// ---------- Importar relatório BuyGoods (Relatorio_BuyGoods_AAAA-MM-DD.xlsx, uma aba por produto) ----------
+// Bucketiza por "Create Date" de cada linha (não pelo nome do arquivo), então funciona tanto pro
+// relatório diário (1 dia) quanto pra uma exportação com meses/ano inteiro de uma vez.
+async function processBuyGoodsImport(wb, filename){
+  const byAff = {}; // nome_norm -> {nome, produtos:Set, daily:{dayKey:{vendas,faturamento}}}
+  const porProdutoDia = {}; // produto -> {dayKey: vendas} — soma de TODOS os afiliados (inclusive internos e vendas sem afiliado/diretas), pra bater com o total real da operação
+  const valorProdutoDia = {}; // produto -> {dayKey: {gross,refund,chargeback,shipping,taxes}} — mesma base do porProdutoDia
+  const canaisDia = {}; // canalKey -> {dayKey: {vendas,gross,refund,chargeback,shipping,taxes}} — Helpgrid, Welcome, Gestores
+  let sheetsLidas = 0;
+  let diasEncontrados = new Set();
+
+  wb.SheetNames.forEach(produto => {
+    const ws = wb.Sheets[produto];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+    if(!rows.length) return;
+    const header = rows[0];
+    const hidx = {};
+    header.forEach((h,i) => hidx[h] = i);
+    if(!('Affiliate Name' in hidx) || !('Action Type' in hidx) || !('Gross' in hidx) || !('Create Date' in hidx)) return;
+    sheetsLidas++;
+
+    for(let i=1; i<rows.length; i++){
+      const row = rows[i];
+      if(!row) continue;
+      // pode vir sem afiliado (venda direta/orgânica) — ainda assim é uma venda real da operação,
+      // então só sai do loop mais abaixo, depois de contar no total por produto/dia e nos canais
+      const nome = row[hidx['Affiliate Name']];
+
+      const canceledRaw = row[hidx['Was Canceled']];
+      if(canceledRaw == 1 || canceledRaw === '1' || canceledRaw === true) continue;
+
+      const dateRaw = row[hidx['Create Date']];
+      if(!dateRaw) continue;
+      const dt = new Date(dateRaw);
+      if(isNaN(dt.getTime())) continue;
+      const dayKey = dt.toISOString().slice(0,10);
+      diasEncontrados.add(dayKey);
+
+      const actionType = row[hidx['Action Type']];
+      const nkey = normName(nome);
+
+      if(actionType === 'neworder' && isFrontal_(row, hidx)){
+        if(!porProdutoDia[produto]) porProdutoDia[produto] = {};
+        porProdutoDia[produto][dayKey] = (porProdutoDia[produto][dayKey] || 0) + 1;
+      }
+
+      // bruto/líquido por produto e por dia — mesma regra do porProdutoDia acima: todo mundo, sem exclusão
+      if(!valorProdutoDia[produto]) valorProdutoDia[produto] = {};
+      if(!valorProdutoDia[produto][dayKey]) valorProdutoDia[produto][dayKey] = {gross:0, refund:0, chargeback:0, shipping:0, taxes:0};
+      acumulaValor_(valorProdutoDia[produto][dayKey], actionType, row, hidx);
+
+      // contas internas com visão própria na lateral (Helpgrid, Welcome, Gestores) — também sem exclusão,
+      // é justamente o propósito dessas abas
+      const canalKey = canalDoNome_(nkey);
+      if(canalKey){
+        if(!canaisDia[canalKey]) canaisDia[canalKey] = {};
+        if(!canaisDia[canalKey][dayKey]) canaisDia[canalKey][dayKey] = {vendas:0, gross:0, refund:0, chargeback:0, shipping:0, taxes:0};
+        if(actionType === 'neworder' && isFrontal_(row, hidx)) canaisDia[canalKey][dayKey].vendas++;
+        acumulaValor_(canaisDia[canalKey][dayKey], actionType, row, hidx);
+      }
+
+      if(!nome || !nkey || isExcludedName(nkey)) continue; // daqui pra baixo é só o ranking por afiliado — precisa de nome
+
+      if(!byAff[nkey]) byAff[nkey] = {nome, produtos:new Set(), daily:{}};
+      const rec = byAff[nkey];
+      if(!rec.daily[dayKey]) rec.daily[dayKey] = {vendas:0, faturamento:0};
+
+      if(actionType === 'neworder'){
+        rec.daily[dayKey].vendas++;
+        rec.daily[dayKey].faturamento += parseFloat(row[hidx['Gross']]) || 0;
+        rec.produtos.add(produto);
+      } else if(actionType === 'refund'){
+        rec.daily[dayKey].faturamento -= parseFloat(row[hidx['Refund Amount']]) || 0;
+      } else if(actionType === 'chargeback'){
+        rec.daily[dayKey].faturamento -= parseFloat(row[hidx['Chargeback Amount']]) || 0;
+      }
+    }
+  });
+
+  if(sheetsLidas === 0){
+    alert('Não encontrei nenhuma aba com as colunas esperadas (Affiliate Name, Action Type, Gross, Create Date) — confira se é o Relatorio_BuyGoods certo.');
+    return;
+  }
+
+  const existingKeys = new Set(DATA.map(e => normName(e.nome)));
+  // só atualiza quem está na carteira da Gaby — o resto do relatório é ignorado
+  const keys = Object.keys(byAff).filter(k => existingKeys.has(k));
+  let updatedCount = 0, newCount = 0;
+
+  keys.forEach(key => {
+    const rec = byAff[key];
+    const produtos = Array.from(rec.produtos);
+
+    let upd = importUpdates[key];
+    if(!upd){
+      upd = {
+        nome: rec.nome, volume_ago:null, volume_set:null, net_ago:null, net_set:null, tem_dado_custo:false,
+        ultima_venda:null, dias_sem_vender:null, tier:'sem_venda_2026',
+        confirmado:false, total_pedidos:0, volume_total:0, produtos:[], streak_diario:0, dados_diarios:{}
+      };
+    }
+    upd.ultima_venda = fmtDate_(upd.ultima_venda) || null; // sanitiza caso tenha vindo do Sheets como timestamp
+    if(!upd.dados_diarios) upd.dados_diarios = {};
+    if(!revenueDaily[key]) revenueDaily[key] = {};
+
+    // grava cada dia encontrado nesse import (sobrescreve o dia se já existia — reimportar é seguro)
+    Object.keys(rec.daily).forEach(dayKey => {
+      const d = rec.daily[dayKey];
+      const faturamento = Math.round(d.faturamento*100)/100;
+      upd.dados_diarios[dayKey] = {orders: d.vendas, volume: faturamento};
+      revenueDaily[key][dayKey] = {vendas: d.vendas, faturamento, produtos};
+      if(d.vendas > 0 && (!upd.ultima_venda || dayKey > upd.ultima_venda)) upd.ultima_venda = dayKey;
+    });
+    revenueNames[key] = rec.nome;
+
+    // totais sempre recalculados a partir do histórico completo acumulado (idempotente — reimportar não duplica)
+    let totalPedidos = 0, volumeTotal = 0;
+    Object.values(upd.dados_diarios).forEach(d => { totalPedidos += d.orders||0; volumeTotal += d.volume||0; });
+    upd.total_pedidos = totalPedidos;
+    upd.volume_total = Math.round(volumeTotal*100)/100;
+    upd.confirmado = totalPedidos > 0;
+
+    const prodSet = new Set(upd.produtos||[]);
+    produtos.forEach(p => prodSet.add(p));
+    upd.produtos = Array.from(prodSet);
+    const {dias, tier} = recalcTierFromLastSale_(upd.ultima_venda);
+    upd.dias_sem_vender = dias;
+    upd.tier = tier;
+    upd.streak_diario = streakDiario_(upd.dados_diarios, upd.ultima_venda ? new Date(upd.ultima_venda) : null);
+    upd.nome = rec.nome;
+    importUpdates[key] = upd;
+
+    if(existingKeys.has(key)) updatedCount++; else newCount++;
+  });
+
+  saveLS(LS_UPDATES, importUpdates);
+  saveLS(LS_REVENUE, revenueDaily);
+  saveLS(LS_REVENUE_NAMES, revenueNames);
+
+  // soma no total de vendas por produto por dia (Vendas por dia) — inclui contas internas de propósito,
+  // é o total real da operação, não o ranking de afiliados
+  const produtosTocados = Object.keys(porProdutoDia);
+  produtosTocados.forEach(produto => {
+    if(!vendasPorProdutoDia[produto]) vendasPorProdutoDia[produto] = {};
+    Object.keys(porProdutoDia[produto]).forEach(dayKey => {
+      vendasPorProdutoDia[produto][dayKey] = porProdutoDia[produto][dayKey];
+    });
+  });
+  saveLS(LS_VENDAS_PRODUTO, vendasPorProdutoDia);
+
+  // idem pro bruto/líquido por produto (reimportar é seguro — sobrescreve o dia)
+  const produtosValorTocados = Object.keys(valorProdutoDia);
+  produtosValorTocados.forEach(produto => {
+    if(!vendasValorPorProdutoDia[produto]) vendasValorPorProdutoDia[produto] = {};
+    Object.keys(valorProdutoDia[produto]).forEach(dayKey => {
+      vendasValorPorProdutoDia[produto][dayKey] = valorProdutoDia[produto][dayKey];
+    });
+  });
+  saveLS(LS_VENDAS_VALOR, vendasValorPorProdutoDia);
+
+  // idem pros canais internos (Helpgrid, Welcome, Gestores)
+  const canaisTocados = Object.keys(canaisDia);
+  canaisTocados.forEach(canalKey => {
+    if(!canaisPorDia[canalKey]) canaisPorDia[canalKey] = {};
+    Object.keys(canaisDia[canalKey]).forEach(dayKey => {
+      canaisPorDia[canalKey][dayKey] = canaisDia[canalKey][dayKey];
+    });
+  });
+  saveLS(LS_CANAIS, canaisPorDia);
+
+  const diasOrdenados = Array.from(diasEncontrados).sort();
+  const periodoTxt = diasOrdenados.length > 1 ? `${diasOrdenados[0]} a ${diasOrdenados[diasOrdenados.length-1]}` : (diasOrdenados[0] || '—');
+  lastImportInfo = {filename, date: new Date().toISOString(), updated: updatedCount, novos: newCount, periodo: periodoTxt};
+  saveLS(LS_IMPORT_INFO, lastImportInfo);
+
+  DATA = buildData();
+  updateMonthOptions();
+  selectedMonth = document.getElementById('monthFilter').value;
+  applyFilters();
+  renderImportInfo();
+  renderVendasDia();
+  showToast(`Importado (${periodoTxt}): ${updatedCount} atualizados, ${Object.keys(byAff).length - keys.length} fora da carteira (ignorados)` + (APPS_SCRIPT_URL ? ' — sincronizando...' : ' (salvo neste navegador)'));
+
+  if(APPS_SCRIPT_URL){
+    const importBatch = keys.map(key => {
+      const rec = Object.assign({}, importUpdates[key]);
+      rec.dados_diarios = JSON.stringify(rec.dados_diarios || {});
+      return rec;
+    });
+    const revenueBatch = keys.map(key => ({nome: byAff[key].nome, dados_json: JSON.stringify(revenueDaily[key])}));
+    const vendasProdutoBatch = produtosTocados.map(produto => ({produto, dados_json: JSON.stringify(vendasPorProdutoDia[produto])}));
+    const vendasValorBatch = produtosValorTocados.map(produto => ({produto, dados_json: JSON.stringify(vendasValorPorProdutoDia[produto])}));
+    const canaisBatch = canaisTocados.map(canal => ({canal, dados_json: JSON.stringify(canaisPorDia[canal])}));
+    const [r1, r2, r3, r4, r5] = await Promise.all([
+      apiPost('importBatch', importBatch), apiPost('importRevenueBatch', revenueBatch),
+      apiPost('importVendasProdutoBatch', vendasProdutoBatch), apiPost('importVendasValorBatch', vendasValorBatch),
+      apiPost('importCanaisBatch', canaisBatch)
+    ]);
+    if(r1 && r1.ok && r2 && r2.ok && r3 && r3.ok && r4 && r4.ok && r5 && r5.ok){ syncStatus='ok'; showToast(`Sincronizado: ${keys.length} afiliados no Google Sheets ✓`); }
+    else { syncStatus='erro'; showToast('Import salvo localmente, mas não sincronizou com o Sheets ainda'); }
+    renderSyncBadge();
+  }
+}
+
+function renderImportInfo(){
+  const el = document.getElementById('lastImportInfo');
+  if(!lastImportInfo){ el.textContent = 'Nenhuma importação feita ainda neste navegador.'; return; }
+  const d = new Date(lastImportInfo.date);
+  const periodoTxt = lastImportInfo.periodo ? ` (período: ${escapeHtml(lastImportInfo.periodo)})` : '';
+  el.innerHTML = `Última importação: <b>${lastImportInfo.filename}</b>${periodoTxt} em ${d.toLocaleString('pt-BR')} — ${lastImportInfo.updated} atualizados, ${lastImportInfo.novos} novos sem contato.`;
+}
+
+// ---------- Aba "Vendas por dia" ----------
+// Total de vendas da operação inteira (todos os produtos, todos os afiliados incl. internos) por dia —
+// semana e mês são somados aqui no navegador a partir do dado diário, nunca ficam "presos" numa coluna fixa.
+function diaLbl_(dayKey){
+  const [, m, d] = dayKey.split('-');
+  return `${d}/${m}`;
+}
+function isoWeekMonday_(dayKey){
+  const d = new Date(dayKey+'T00:00:00');
+  const dow = (d.getDay()+6)%7; // 0 = segunda
+  d.setDate(d.getDate()-dow);
+  return d.toISOString().slice(0,10);
+}
+function mesLblCurto_(monthKey){
+  const nomes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const [y,m] = monthKey.split('-');
+  return nomes[parseInt(m,10)-1] + '/' + y.slice(2);
+}
+function vendasDiaAllDays_(){
+  const dias = new Set();
+  Object.values(vendasPorProdutoDia).forEach(porDia => Object.keys(porDia).forEach(d => dias.add(d)));
+  return Array.from(dias).sort();
+}
+function vendasDiaProdutos_(){
+  return Object.keys(vendasPorProdutoDia).sort((a,b) => {
+    const totalA = Object.values(vendasPorProdutoDia[a]).reduce((s,v)=>s+(v||0),0);
+    const totalB = Object.values(vendasPorProdutoDia[b]).reduce((s,v)=>s+(v||0),0);
+    return totalB - totalA;
+  });
+}
+function renderVendasDiaKPIs_(){
+  const el = document.getElementById('vendasDiaKpis');
+  if(!el) return;
+  const hojeKey = new Date().toISOString().slice(0,10);
+  const ontemKey = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const mesAtual = hojeKey.slice(0,7);
+  const semanaAtualMonday = isoWeekMonday_(hojeKey);
+
+  let totalOntem = 0, totalSemana = 0, totalMes = 0, ultimoDiaComDado = null;
+  Object.values(vendasPorProdutoDia).forEach(porDia => {
+    Object.keys(porDia).forEach(dayKey => {
+      const v = porDia[dayKey] || 0;
+      if(dayKey === ontemKey) totalOntem += v;
+      if(isoWeekMonday_(dayKey) === semanaAtualMonday) totalSemana += v;
+      if(dayKey.slice(0,7) === mesAtual) totalMes += v;
+      if(!ultimoDiaComDado || dayKey > ultimoDiaComDado) ultimoDiaComDado = dayKey;
+    });
+  });
+  const semDadoOntem = totalOntem === 0 && ultimoDiaComDado && ultimoDiaComDado < ontemKey;
+
+  // bruto/líquido dos mesmos períodos (fonte separada — só existe pros dias já reimportados depois
+  // que essa coluna foi adicionada; dia sem esse dado mostra "sem dado de valor ainda")
+  const somaValor_ = filtro => {
+    const acc = {gross:0, refund:0, chargeback:0, shipping:0, taxes:0};
+    let temDado = false;
+    Object.values(vendasValorPorProdutoDia).forEach(porDia => {
+      Object.keys(porDia).forEach(dayKey => {
+        if(!filtro(dayKey)) return;
+        temDado = true;
+        const v = porDia[dayKey];
+        acc.gross += v.gross||0; acc.refund += v.refund||0; acc.chargeback += v.chargeback||0;
+        acc.shipping += v.shipping||0; acc.taxes += v.taxes||0;
+      });
+    });
+    return temDado ? acc : null;
+  };
+  const valorTxt_ = v => v ? `${fmtMoney(v.gross)} bruto · ${fmtMoney(netOf_(v))} líquido` : 'sem dado de valor ainda';
+
+  el.innerHTML = `
+    <div class="mini-kpi">
+      <div class="lab">Ontem (${diaLbl_(ontemKey)})</div>
+      <div class="val">${totalOntem}</div>
+      <div class="note">${semDadoOntem ? 'sem import ainda — último dado: '+diaLbl_(ultimoDiaComDado) : 'vendas (order items)'}</div>
+      <div class="note">${valorTxt_(somaValor_(d => d===ontemKey))}</div>
+    </div>
+    <div class="mini-kpi">
+      <div class="lab">Esta semana</div>
+      <div class="val">${totalSemana}</div>
+      <div class="note">desde ${diaLbl_(semanaAtualMonday)}</div>
+      <div class="note">${valorTxt_(somaValor_(d => isoWeekMonday_(d)===semanaAtualMonday))}</div>
+    </div>
+    <div class="mini-kpi">
+      <div class="lab">Este mês</div>
+      <div class="val">${totalMes}</div>
+      <div class="note">${mesLblCurto_(mesAtual)}</div>
+      <div class="note">${valorTxt_(somaValor_(d => d.slice(0,7)===mesAtual))}</div>
+    </div>`;
+}
+let vendasDiaPeriodo = 'dia';
+function renderVendasDiaTable_(){
+  const head = document.getElementById('vendasDiaHead');
+  const body = document.getElementById('vendasDiaBody');
+  if(!head || !body) return;
+  const produtos = vendasDiaProdutos_();
+  if(!produtos.length){
+    head.innerHTML = '<th>Produto</th>';
+    body.innerHTML = '<tr><td class="row-sub">Sem dado ainda — importe o relatório BuyGoods na aba Geral.</td></tr>';
+    return;
+  }
+  const allDays = vendasDiaAllDays_();
+  let colKeys, colLabels, getVal;
+  if(vendasDiaPeriodo === 'semana'){
+    colKeys = Array.from(new Set(allDays.map(isoWeekMonday_))).sort();
+    colLabels = colKeys.map(w => 'Sem '+diaLbl_(w));
+    getVal = (produto,col) => Object.keys(vendasPorProdutoDia[produto]).reduce((s,d) => s + (isoWeekMonday_(d)===col ? (vendasPorProdutoDia[produto][d]||0) : 0), 0);
+  } else if(vendasDiaPeriodo === 'mes'){
+    colKeys = Array.from(new Set(allDays.map(d=>d.slice(0,7)))).sort();
+    colLabels = colKeys.map(mesLblCurto_);
+    getVal = (produto,col) => Object.keys(vendasPorProdutoDia[produto]).reduce((s,d) => s + (d.slice(0,7)===col ? (vendasPorProdutoDia[produto][d]||0) : 0), 0);
+  } else {
+    colKeys = allDays.slice(-14);
+    colLabels = colKeys.map(diaLbl_);
+    getVal = (produto,col) => vendasPorProdutoDia[produto][col] || 0;
+  }
+  const totalDoProduto = produto => Object.values(vendasPorProdutoDia[produto]).reduce((s,v)=>s+(v||0),0);
+  const valorDoProduto = produto => {
+    const porDia = vendasValorPorProdutoDia[produto];
+    if(!porDia) return null;
+    const acc = {gross:0, refund:0, chargeback:0, shipping:0, taxes:0};
+    let temDado = false;
+    Object.values(porDia).forEach(v => { temDado = true; acc.gross+=v.gross||0; acc.refund+=v.refund||0; acc.chargeback+=v.chargeback||0; acc.shipping+=v.shipping||0; acc.taxes+=v.taxes||0; });
+    return temDado ? acc : null;
+  };
+
+  head.innerHTML = `<th style="width:16%">Produto</th>` + colLabels.map(l=>`<th class="r num">${escapeHtml(l)}</th>`).join('') + `<th class="r num">Total</th><th class="r num">Bruto</th><th class="r num">Líquido</th>`;
+  body.innerHTML = produtos.map(produto => {
+    const cells = colKeys.map(c => {
+      const v = getVal(produto,c);
+      return `<td class="r num">${v ? v : '<span style="color:var(--line)">·</span>'}</td>`;
+    }).join('');
+    const valor = valorDoProduto(produto);
+    const grossTxt = valor ? fmtMoney(valor.gross) : '<span style="color:var(--line)">·</span>';
+    const netTxt = valor ? fmtMoney(netOf_(valor)) : '<span style="color:var(--line)">·</span>';
+    return `<tr><td class="row-name">${escapeHtml(produto)}</td>${cells}<td class="r num" style="font-weight:700">${totalDoProduto(produto)}</td><td class="r num">${grossTxt}</td><td class="r num">${netTxt}</td></tr>`;
+  }).join('') +
+    `<tr style="background:var(--row-even); font-weight:700"><td>TOTAL</td>` +
+    colKeys.map(c => `<td class="r num">${produtos.reduce((s,p)=>s+getVal(p,c),0)}</td>`).join('') +
+    `<td class="r num">${produtos.reduce((s,p)=>s+totalDoProduto(p),0)}</td>` +
+    `<td class="r num">${fmtMoney(produtos.reduce((s,p)=>{const v=valorDoProduto(p); return s+(v?v.gross:0);},0))}</td>` +
+    `<td class="r num">${fmtMoney(produtos.reduce((s,p)=>{const v=valorDoProduto(p); return s+(v?netOf_(v):0);},0))}</td></tr>`;
+}
+function renderVendasDia(){
+  renderVendasDiaKPIs_();
+  renderVendasDiaTable_();
+  const info = document.getElementById('vendasDiaInfo');
+  if(info){
+    const dias = vendasDiaAllDays_();
+    info.textContent = dias.length ? `Dados de ${diaLbl_(dias[0])} a ${diaLbl_(dias[dias.length-1])}.` : 'Ainda sem dado importado.';
+  }
+}
+document.querySelectorAll('#vendasDiaTabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#vendasDiaTabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    vendasDiaPeriodo = btn.dataset.periodo;
+    renderVendasDiaTable_();
+  });
+});
+// Alterna entre as 3 grandes seções da tela: lista de afiliados, Vendas por dia, e a visão de
+// canal interno (Helpgrid/Welcome/Gestores) — só uma fica visível por vez.
+function showView_(which){ // 'afiliados' | 'vendasDia' | 'canal'
+  document.getElementById('afiliadosSection').style.display = which === 'afiliados' ? '' : 'none';
+  document.getElementById('viewVendasDia').style.display = which === 'vendasDia' ? '' : 'none';
+  const tier = document.getElementById('tierFilter').value;
+  document.querySelectorAll('.nav-item[data-tier]').forEach(n => n.classList.toggle('active', which === 'afiliados' && !semContatoAtivo && n.dataset.tier === tier));
+  document.getElementById('navSemContato').classList.toggle('active', which === 'afiliados' && semContatoAtivo);
+  document.getElementById('navVendasDia').classList.toggle('active', which === 'vendasDia');
+}
+
+document.getElementById('navVendasDia').addEventListener('click', () => {
+  showView_('vendasDia');
+  renderVendasDia();
+});
+
+renderImportInfo();
+renderSyncBadge();
+updateMonthOptions();
+selectedMonth = document.getElementById('monthFilter').value;
+applyFilters();
+
+// tenta puxar do Google Sheets (se configurado) e re-renderiza quando chegar
+(async () => {
+  if(!APPS_SCRIPT_URL) return;
+  syncStatus = 'pendente'; renderSyncBadge();
+  const ok = await syncFromServer();
+  if(ok){
+    DATA = buildData();
+    updateMonthOptions();
+    selectedMonth = document.getElementById('monthFilter').value;
+    applyFilters();
+  }
+})();
+</script>
+</body>
+</html>
