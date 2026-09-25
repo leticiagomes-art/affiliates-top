@@ -222,7 +222,54 @@
   #detailModalBg{justify-content:flex-end; align-items:stretch; padding:8px;}
   #detailModalBg .modal{max-width:520px; max-height:none; height:100%; border-radius:14px; animation:slideIn .22s cubic-bezier(.2,.8,.2,1);}
   @keyframes slideIn{from{transform:translateX(24px); opacity:0} to{transform:none; opacity:1}}
-  #detailName{font-size:18px;}
+  #detailModalBg .modal.drawer{display:flex; flex-direction:column; padding:0; overflow:hidden;}
+  .drawer .dh{display:flex; align-items:flex-start; gap:12px; padding:16px 16px 0;}
+  .drawer .dh .av{width:40px; height:40px; font-size:15px;}
+  .drawer .dh-txt{flex:1; min-width:0;}
+  .drawer #detailName{font-size:17px; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .drawer .dh-meta{display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin-top:6px;}
+  .icon-x{width:30px; height:30px; display:grid; place-items:center; border:0; border-radius:7px; background:none; color:var(--muted); cursor:pointer; flex:none;}
+  .icon-x:hover{background:var(--bg-hover); color:var(--ink);}
+  .drawer .dact{display:flex; flex-wrap:wrap; gap:6px; padding:12px 16px;}
+  .drawer .dact a.btn{text-decoration:none;}
+  .drawer .dtabs{display:flex; gap:2px; padding:0 16px; border-bottom:1px solid var(--line);}
+  .drawer .dtabs button{border:0; border-bottom:2px solid transparent; margin-bottom:-1px; background:none; padding:9px 10px 10px; color:var(--text-2); font-weight:500; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:6px;}
+  .drawer .dtabs button:hover{color:var(--ink);}
+  .drawer .dtabs button.active{color:var(--ink); border-bottom-color:var(--ink);}
+  .drawer .dtabs .ct{font-size:11.5px; color:var(--muted); background:var(--bg-hover); border-radius:5px; padding:0 5px;}
+  .drawer .dbody{flex:1; overflow-y:auto; padding:14px 16px 18px;}
+  .drawer .dsub{color:var(--muted); font-size:12.5px; margin:0 0 10px;}
+  .drawer .dblock:empty{display:none;}
+  .drawer .dblock{margin-bottom:10px; font-size:12.5px;}
+  .drawer .dblock label{display:block; font-size:12px; color:var(--muted); font-weight:500; margin:0 0 3px;}
+  .drawer .obs{background:var(--bg-sub); border:1px solid var(--line); border-radius:8px; padding:8px 10px; color:var(--text-2); line-height:1.5;}
+  .drawer .dsec{font-size:12.5px; font-weight:600; margin:16px 0 6px;}
+  .drawer .props{display:grid; grid-template-columns:130px 1fr; row-gap:1px; margin:0;}
+  .drawer .props dt{color:var(--muted); font-size:12.5px; padding:7px 0;}
+  .drawer .props dd{margin:0;}
+  .drawer .props input, .drawer .props select{height:32px; width:100%; border:1px solid transparent; background:transparent; border-radius:7px; padding:0 8px; font:inherit; font-size:13px; color:var(--ink); box-shadow:none;}
+  .drawer .props input::placeholder{color:var(--muted);}
+  .drawer .props input:hover, .drawer .props select:hover{background:var(--bg-hover);}
+  .drawer .props input:focus, .drawer .props select:focus{background:var(--bg); border-color:var(--orange); box-shadow:0 0 0 3px var(--accent-soft); outline:0;}
+  .drawer .props-save{display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:12px;}
+  .drawer .period-tabs{margin-bottom:10px;}
+  .tl{position:relative; padding-left:22px;}
+  .tl:before{content:""; position:absolute; left:7px; top:6px; bottom:6px; width:1px; background:var(--line-strong);}
+  .tl .ev{position:relative; margin-bottom:14px;}
+  .tl .ev:before{content:""; position:absolute; left:-19px; top:4px; width:9px; height:9px; border-radius:50%; background:var(--bg); border:2px solid var(--orange);}
+  .tl .ev .h{display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px;}
+  .tl .ev .h b{font-weight:600;}
+  .tl .ev .h span{color:var(--muted);}
+  .tl .ev p{margin:5px 0 0; color:var(--text-2); background:var(--bg-sub); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px; line-height:1.5; white-space:pre-wrap;}
+  .tl-empty{color:var(--muted); font-size:13px; padding:8px 0;}
+  .drawer .composer{border-top:1px solid var(--line); padding:12px 16px; background:var(--bg);}
+  .drawer .composer-box{border:1px solid var(--line-strong); border-radius:10px; padding:8px 10px;}
+  .drawer .composer-box:focus-within{border-color:var(--orange); box-shadow:0 0 0 3px var(--accent-soft);}
+  .drawer .composer textarea{width:100%; height:46px; min-height:0; border:0; outline:0; resize:none; background:none; color:var(--ink); font:inherit; font-size:13px; padding:0; box-shadow:none;}
+  .drawer .composer-row{display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .drawer .composer-row select, .drawer .composer-row input{height:26px; width:auto; max-width:150px; padding:0 6px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text-2); font:inherit; font-size:12px; box-shadow:none;}
+  .drawer .composer-row .sp{flex:1;}
+  .drawer .composer-row .btn{height:28px;}
   .contact-log{background:var(--contact-log-bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:12.5px; color:var(--contact-log-fg); margin-top:6px; line-height:1.45;}
   .contact-log b{color:var(--ink); font-weight:600;}
   .file-input-btn{position:relative; overflow:hidden; display:inline-flex; align-items:center;}
@@ -555,68 +602,65 @@
 </div>
 
 <div class="modal-bg" id="detailModalBg">
-  <div class="modal" style="max-width:600px;">
-    <h3 id="detailName"></h3>
-    <p class="sub" id="detailSub"></p>
-    <div id="detailTrend" style="font-size:12.5px; margin:-6px 0 10px;"></div>
-    <div id="detailContactLog" style="font-size:12px; margin:0 0 10px;"></div>
-    <div id="detailLifetime" style="font-size:12px; margin:0 0 10px;"></div>
-
-    <div class="detail-grid">
-      <div>
-        <label>Telefone (WhatsApp)</label>
-        <input type="text" id="dTelefone" placeholder="Ex: (11) 99999-9999">
+  <div class="modal drawer">
+    <div class="dh">
+      <span class="av" id="detailAvatar"></span>
+      <div class="dh-txt">
+        <h3 id="detailName"></h3>
+        <div class="dh-meta" id="detailMeta"></div>
       </div>
-      <div>
-        <label>Usuário Telegram</label>
-        <input type="text" id="dTelegram" placeholder="Ex: @usuario">
-      </div>
-      <div>
-        <label>Nome no dash da empresa</label>
-        <input type="text" id="dNomeDash" placeholder="Ex: joao-silva">
-      </div>
-      <div>
-        <label>Tipo de tráfego</label>
-        <select id="dTrafego">
-          <option value="">—</option>
-          <option value="Facebook">Facebook</option>
-          <option value="YouTube">YouTube</option>
-          <option value="Outro">Outro</option>
-        </select>
-      </div>
-      <div>
-        <label>CPA do afiliado</label>
-        <input type="text" id="dCpa" placeholder="Ex: 35">
-      </div>
-      <div>
-        <label>Usuário/e-mail BuyGoods</label>
-        <input type="text" id="dBuygoods" placeholder="Ex: joao@email.com">
-      </div>
-      <div>
-        <label>Atendente que falou com o afiliado</label>
-        <select id="dAtendente">
-          <option value="">—</option>
-          <option value="Gaby">Gaby</option>
-        </select>
-      </div>
+      <button class="icon-x" id="dClose" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div class="modal-actions">
-      <button class="btn-orange" id="dSaveMeta" style="flex:0 0 auto; padding:9px 16px;">Salvar dados</button>
+    <div class="dact" id="detailActions"></div>
+    <div class="dtabs" id="detailTabs">
+      <button data-dtab="geral" class="active">Visão geral</button>
+      <button data-dtab="contatos">Contatos <span class="ct" id="detailContactCount">0</span></button>
+      <button data-dtab="vendas">Vendas</button>
     </div>
-
-    <h2 class="section-title" style="margin-top:20px;"><span class="bar"></span>Análise de vendas</h2>
-    <p class="sub" id="detailAnalysisSub"></p>
-    <div class="period-tabs" id="periodTabs">
-      <button data-period="hoje">Hoje</button>
-      <button data-period="ontem">Ontem</button>
-      <button data-period="mes" class="active">Este mês</button>
-      <button data-period="ano">Este ano</button>
-      <button data-period="tudo">Tudo</button>
+    <div class="dbody">
+      <section data-dpane="geral">
+        <p class="dsub" id="detailSub"></p>
+        <div id="detailTrend" class="dblock"></div>
+        <div id="detailLifetime" class="dblock"></div>
+        <div id="detailObs" class="dblock"></div>
+        <div class="dsec">Dados do afiliado</div>
+        <dl class="props">
+          <dt>Telefone</dt><dd><input type="text" id="dTelefone" placeholder="Adicionar…"></dd>
+          <dt>Telegram</dt><dd><input type="text" id="dTelegram" placeholder="Adicionar…"></dd>
+          <dt>Usuário BuyGoods</dt><dd><input type="text" id="dBuygoods" placeholder="Adicionar…"></dd>
+          <dt>Nome no dash</dt><dd><input type="text" id="dNomeDash" placeholder="Adicionar…"></dd>
+          <dt>Tráfego</dt><dd><select id="dTrafego"><option value="">—</option><option value="Facebook">Facebook</option><option value="YouTube">YouTube</option><option value="Outro">Outro</option></select></dd>
+          <dt>CPA</dt><dd><input type="text" id="dCpa" placeholder="Adicionar…"></dd>
+          <dt>Atendente</dt><dd><select id="dAtendente"><option value="">—</option><option value="Gaby">Gaby</option></select></dd>
+        </dl>
+        <div class="props-save"><span class="row-sub" id="dDirty"></span><button class="btn pri" id="dSaveMeta">Salvar dados</button></div>
+      </section>
+      <section data-dpane="contatos" hidden>
+        <div id="detailContactLog"></div>
+      </section>
+      <section data-dpane="vendas" hidden>
+        <p class="dsub" id="detailAnalysisSub"></p>
+        <div class="period-tabs" id="periodTabs">
+          <button data-period="hoje">Hoje</button>
+          <button data-period="ontem">Ontem</button>
+          <button data-period="mes" class="active">Este mês</button>
+          <button data-period="ano">Este ano</button>
+          <button data-period="tudo">Tudo</button>
+        </div>
+        <div id="detailChartBox"></div>
+      </section>
     </div>
-    <div id="detailChartBox"></div>
-
-    <div class="modal-actions" style="margin-top:18px;">
-      <button class="btn-ghost" id="dClose">Fechar</button>
+    <div class="composer">
+      <div class="composer-box">
+        <textarea id="dcResumo" placeholder="Registrar contato — o que ele respondeu?"></textarea>
+        <div class="composer-row">
+          <select id="dcOferta" title="Oferta / script usado"></select>
+          <input type="date" id="dcData" title="Data">
+          <select id="dcAtendente" title="Atendente"><option value="">Atendente</option><option value="Gaby">Gaby</option></select>
+          <span class="sp"></span>
+          <button class="btn pri" id="dcSave">Registrar</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1613,49 +1657,83 @@ function openContactModal(entry){
   contactModalBg.classList.add('show');
 }
 document.getElementById('cCancel').addEventListener('click', () => contactModalBg.classList.remove('show'));
+async function registrarContato_(entry, oferta, resumo, data, atendente){
+  const key = normName(entry.nome);
+  if(!contactLog[key]) contactLog[key] = [];
+  contactLog[key].push({oferta, resumo, data, atendente, criado_em: new Date().toISOString()});
+  saveLS(LS_CONTACTS, contactLog);
+  renderTable();
+  showToast(APPS_SCRIPT_URL ? 'Registrado — sincronizando...' : 'Contato registrado (salvo neste navegador)');
+  const res = await apiPost('logContact', {nome: entry.nome, historico_json: JSON.stringify(contactLog[key])});
+  if(res && res.ok){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
+  else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou — ficou salvo só neste navegador por enquanto'); }
+  renderSyncBadge();
+}
 document.getElementById('cSave').addEventListener('click', async () => {
   if(!contactModalTarget) return;
-  const key = normName(contactModalTarget.nome);
   const oferta = document.getElementById('cOferta').value;
   const resumo = document.getElementById('cResumo').value.trim();
   const data = document.getElementById('cData').value || new Date().toISOString().slice(0,10);
   const atendente = document.getElementById('cAtendente').value;
-  if(!contactLog[key]) contactLog[key] = [];
-  contactLog[key].push({oferta, resumo, data, atendente, criado_em: new Date().toISOString()});
-  saveLS(LS_CONTACTS, contactLog);
   contactModalBg.classList.remove('show');
-  renderTable();
-  showToast(APPS_SCRIPT_URL ? 'Registrado — sincronizando...' : 'Contato registrado (salvo neste navegador)');
-  const res = await apiPost('logContact', {nome: contactModalTarget.nome, historico_json: JSON.stringify(contactLog[key])});
-  if(res && res.ok){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
-  else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou — ficou salvo só neste navegador por enquanto'); }
-  renderSyncBadge();
+  await registrarContato_(contactModalTarget, oferta, resumo, data, atendente);
+  if(detailTarget && detailModalBg.classList.contains('show') && normName(detailTarget.nome) === normName(contactModalTarget.nome)) renderDetailContatos_();
 });
+
 
 // ---------- Modal: Detalhes do afiliado (análise + dados de contato extra) ----------
 const detailModalBg = document.getElementById('detailModalBg');
 let detailTarget = null;
 let detailPeriod = 'mes';
 
+function timelineContatoHtml_(key){
+  const log = ordenarContatos_(contactLog[key] || []);
+  if(!log.length) return '<div class="tl-empty">Nenhum contato registrado ainda. Use o campo abaixo pra registrar o primeiro.</div>';
+  return '<div class="tl">' + log.map(c => `
+    <div class="ev"><div class="h"><b>${escapeHtml(c.atendente || 'Contato')}</b><span>${escapeHtml(fmtDate_(c.data))}</span>${c.oferta ? `<span class="tag">${escapeHtml(c.oferta)}</span>` : ''}</div>
+    ${c.resumo ? `<p>${escapeHtml(c.resumo)}</p>` : ''}</div>`).join('') + '</div>';
+}
+function renderDetailContatos_(){
+  if(!detailTarget) return;
+  const key = normName(detailTarget.nome);
+  document.getElementById('detailContactLog').innerHTML = timelineContatoHtml_(key);
+  document.getElementById('detailContactCount').textContent = (contactLog[key] || []).length;
+}
+function setDetailTab_(tab){
+  document.querySelectorAll('#detailTabs button').forEach(b => b.classList.toggle('active', b.dataset.dtab === tab));
+  document.querySelectorAll('#detailModalBg [data-dpane]').forEach(sec => { sec.hidden = sec.dataset.dpane !== tab; });
+}
+document.querySelectorAll('#detailTabs button').forEach(b => b.addEventListener('click', () => setDetailTab_(b.dataset.dtab)));
+
 function openDetailModal(entry){
   detailTarget = entry;
   detailPeriod = 'mes';
-  document.getElementById('detailName').textContent = entry.nome;
-  const produtos = produtosFallback_(entry).join(', ') || (entry.produto_planilha || '—');
-  const statusVenda = entry.confirmado
-    ? `confirmado · ${entry.total_pedidos||0}× · ${fmtMoney(entry.volume_total||0)} histórico`
-    : 'sem venda confirmada em 2026';
-  const streakTxt = (entry.streak_diario||0) >= 2 ? ` · ${entry.streak_diario} dias seguidos vendendo` : '';
-  document.getElementById('detailSub').textContent = `${produtos} — ${statusVenda}${streakTxt}`;
-  document.getElementById('detailTrend').innerHTML = trendCell(entry);
-  document.getElementById('detailContactLog').innerHTML = historicoContatoHtml_(normName(entry.nome));
-  const life = entry.lifetime;
-  document.getElementById('detailLifetime').innerHTML = life
-    ? `<label>Histórico geral (desde jan/2025, base BuyGoods)</label><div class="row-sub">${life.orders} pedido${life.orders===1?'':'s'} · ${fmtMoney(life.gross)} bruto · ${fmtMoney(life.net)} líquido${life.refunds?' · '+fmtMoney(life.refunds)+' em reembolso/chargeback':''}</div>`
-    : '';
-
   const key = normName(entry.nome);
   const meta = affiliateMeta[key] || {};
+
+  const av = document.getElementById('detailAvatar');
+  av.textContent = initials_(entry.nome); av.style.background = avatarColor_(entry.nome);
+  document.getElementById('detailName').textContent = entry.nome;
+  const produtos = produtosFallback_(entry);
+  const dias = (entry.dias_sem_vender!==null && entry.dias_sem_vender!==undefined) ? ' · '+entry.dias_sem_vender+'d' : '';
+  document.getElementById('detailMeta').innerHTML =
+    `<span class="badge b-${entry.tier}"><i></i>${tierLabel_(entry.tier)}${dias}</span>` +
+    produtos.slice(0,4).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join('');
+
+  const statusVenda = entry.confirmado
+    ? `Venda confirmada · ${entry.total_pedidos||0} pedido${(entry.total_pedidos||0)===1?'':'s'} · ${fmtMoney(entry.volume_total||0)} no histórico`
+    : 'Sem venda confirmada em 2026';
+  const streakTxt = (entry.streak_diario||0) >= 2 ? ` · ${entry.streak_diario} dias seguidos vendendo` : '';
+  document.getElementById('detailSub').textContent = statusVenda + streakTxt + (entry.ultima_venda ? ` · última venda ${fmtDate_(entry.ultima_venda)}` : '');
+  const temTrend = entry.volume_ago!==null && entry.volume_ago!==undefined && entry.volume_set!==null && entry.volume_set!==undefined;
+  document.getElementById('detailTrend').innerHTML = temTrend ? `<label>Tendência</label>${trendCell(entry)}` : '';
+  const life = entry.lifetime;
+  document.getElementById('detailLifetime').innerHTML = life
+    ? `<label>Histórico geral (base BuyGoods)</label><div>${life.orders} pedido${life.orders===1?'':'s'} · ${fmtMoney(life.gross)} bruto · ${fmtMoney(life.net)} líquido${life.refunds?' · '+fmtMoney(life.refunds)+' em reembolso/chargeback':''}</div>`
+    : '';
+  const obs = entry.status_planilha && !/^adicionado manualmente/.test(entry.status_planilha) ? entry.status_planilha : '';
+  document.getElementById('detailObs').innerHTML = obs ? `<label>Observação</label><div class="obs">${escapeHtml(obs)}</div>` : '';
+
   document.getElementById('dTelefone').value = entry.telefone || '';
   document.getElementById('dTelegram').value = entry.telegram || '';
   document.getElementById('dNomeDash').value = meta.nome_dash || '';
@@ -1663,11 +1741,53 @@ function openDetailModal(entry){
   document.getElementById('dCpa').value = meta.cpa || '';
   document.getElementById('dBuygoods').value = meta.buygoods_user || '';
   document.getElementById('dAtendente').value = meta.atendente || '';
+  document.getElementById('dDirty').textContent = '';
+
+  const acts = [];
+  if(entry.tel_digits) acts.push(`<a class="btn pri" href="https://wa.me/${entry.tel_digits}" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>WhatsApp</a>`);
+  if(entry.tg_user) acts.push(`<a class="btn ${entry.tel_digits?'':'pri'}" href="https://t.me/${entry.tg_user}" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.9-.3 1.6.2 1.4 1.3z"/></svg>Telegram</a>`);
+  acts.push(`<button class="btn" id="dCopyScript">Copiar script</button>`);
+  if(!entry.tel_digits && !entry.tg_user) acts.push(`<button class="btn" id="dAddContato">Adicionar contato</button>`);
+  document.getElementById('detailActions').innerHTML = acts.join('');
+  document.getElementById('dCopyScript').addEventListener('click', () => {
+    const {offer, text} = buildScript(entry);
+    copyText(text); showToast(`Script copiado (oferta ${offer.nome})`);
+  });
+  const addBtn = document.getElementById('dAddContato');
+  if(addBtn) addBtn.addEventListener('click', () => { setDetailTab_('geral'); document.getElementById('dTelefone').focus(); });
+
+  const sel = document.getElementById('dcOferta');
+  sel.innerHTML = OFFERS.map(o => `<option value="${o.nome}">${o.nome}</option>`).join('') + '<option value="Outro">Outro</option>';
+  document.getElementById('dcResumo').value = '';
+  document.getElementById('dcData').value = new Date().toISOString().slice(0,10);
+  document.getElementById('dcAtendente').value = meta.atendente || '';
+  renderDetailContatos_();
 
   document.querySelectorAll('#periodTabs button').forEach(b => b.classList.toggle('active', b.dataset.period === detailPeriod));
   renderDetailChart(entry, detailPeriod);
+  setDetailTab_('geral');
   detailModalBg.classList.add('show');
 }
+document.querySelectorAll('.drawer .props input, .drawer .props select').forEach(el => {
+  el.addEventListener('input', () => { document.getElementById('dDirty').textContent = 'Alterações não salvas'; });
+});
+document.getElementById('dcSave').addEventListener('click', async () => {
+  if(!detailTarget) return;
+  const resumo = document.getElementById('dcResumo').value.trim();
+  if(!resumo){ document.getElementById('dcResumo').focus(); showToast('Escreva o resumo do contato'); return; }
+  const oferta = document.getElementById('dcOferta').value;
+  const data = document.getElementById('dcData').value || new Date().toISOString().slice(0,10);
+  const atendente = document.getElementById('dcAtendente').value;
+  const alvo = detailTarget;
+  document.getElementById('dcResumo').value = '';
+  const p = registrarContato_(alvo, oferta, resumo, data, atendente);
+  renderDetailContatos_();
+  setDetailTab_('contatos');
+  await p;
+});
+document.getElementById('dcResumo').addEventListener('keydown', ev => {
+  if(ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){ ev.preventDefault(); document.getElementById('dcSave').click(); }
+});
 document.getElementById('dClose').addEventListener('click', () => detailModalBg.classList.remove('show'));
 
 document.querySelectorAll('#periodTabs button').forEach(btn => {
@@ -1692,6 +1812,7 @@ document.getElementById('dSaveMeta').addEventListener('click', async () => {
   };
   affiliateMeta[key] = meta;
   saveLS(LS_META, affiliateMeta);
+  document.getElementById('dDirty').textContent = '';
   DATA = buildData();
   applyFilters();
   showToast(APPS_SCRIPT_URL ? 'Dados salvos — sincronizando...' : 'Dados salvos (neste navegador)');
