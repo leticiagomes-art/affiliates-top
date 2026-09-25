@@ -155,6 +155,7 @@
   .toolbar .sp{flex:1;}
   .toolbar select.chip-select{border-style:dashed; background-color:transparent; color:var(--text-2); field-sizing:content; min-width:0;}
   .toolbar select.chip-select.is-set{border-style:solid; background-color:var(--bg-sub); color:var(--ink);}
+  .kpis3{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px;}
   .stat-chip .d{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; font-size:12px; color:var(--muted); min-height:20px;}
   .up{color:var(--green);} .down{color:var(--red);}
   td.money b{display:block; font-weight:550;}
@@ -411,6 +412,11 @@
   </div>
   <div class="nav-section">
     <div class="nav-heading">Outras visões</div>
+    <div class="nav-item" id="navContatos">
+      <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="label">Contatos registrados</span>
+      <span class="count" id="countContatos">–</span>
+    </div>
     <div class="nav-item" id="navTopParados">
       <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c4.4 0 7-2.9 7-6.5 0-4-3.5-6.5-4.5-10.5-2 2-3 4-3 6-1.5-1-2.5-2.5-2.5-4.5C6 9 5 11.5 5 15.5 5 19.1 7.6 22 12 22z"/></svg></span>
       <span class="label">Top parados</span>
@@ -533,6 +539,39 @@
 
   <div class="footer-note">Universo: afiliados da carteira da Gaby (planilha "Afiliados Gaby — Potenciais" + os inseridos aqui), cruzados com as vendas do relatório diário da BuyGoods · Afiliados Top</div>
 
+</div>
+
+<div id="viewContatos" style="display:none">
+  <div class="page-head">
+    <h1>Contatos registrados</h1>
+    <p>Todo contato que a Gaby registrou com os afiliados, do mais recente pro mais antigo.</p>
+  </div>
+  <div id="contatosStats" class="kpis3"></div>
+  <div class="views" id="contatosPeriodo">
+    <button class="view on" data-per="tudo">Tudo</button>
+    <button class="view" data-per="hoje">Hoje</button>
+    <button class="view" data-per="7">Últimos 7 dias</button>
+    <button class="view" data-per="30">Últimos 30 dias</button>
+  </div>
+  <div class="toolbar">
+    <select id="contatosAtendente" class="chip-select"><option value="">+ Atendente</option><option value="Gaby">Gaby</option><option value="__sem">Sem atendente</option></select>
+    <select id="contatosOferta" class="chip-select"><option value="">+ Oferta</option></select>
+    <span class="sp"></span>
+    <label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="contatosBusca" placeholder="Buscar afiliado ou resumo"></label>
+  </div>
+  <div class="table-scroll">
+  <table>
+    <thead><tr>
+      <th style="width:12%">Data</th>
+      <th style="width:22%">Afiliado</th>
+      <th style="width:11%">Status</th>
+      <th style="width:13%">Oferta</th>
+      <th>Resumo</th>
+      <th style="width:10%">Atendente</th>
+    </tr></thead>
+    <tbody id="contatosBody"></tbody>
+  </table>
+  </div>
 </div>
 
 <div id="viewVendasDia" style="display:none">
@@ -1081,6 +1120,7 @@ function updateNavCounts(){
   DATA.forEach(e => { if(counts[e.tier]!==undefined) counts[e.tier]++; });
   const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   set('countTodos', DATA.length);
+  set('countContatos', Object.values(contactLog).reduce((n, l) => n + (l||[]).length, 0));
   set('countNovo', counts.novo);
   set('countAtivo', counts.ativo);
   set('countAtencao', counts.atencao);
@@ -1787,6 +1827,8 @@ async function registrarContato_(entry, oferta, resumo, data, atendente){
   contactLog[key].push({oferta, resumo, data, atendente, criado_em: new Date().toISOString()});
   saveLS(LS_CONTACTS, contactLog);
   renderTable();
+  updateNavCounts();
+  if(document.getElementById('viewContatos').style.display !== 'none') renderContatos_();
   showToast(APPS_SCRIPT_URL ? 'Registrado — sincronizando...' : 'Contato registrado (salvo neste navegador)');
   const res = await apiPost('logContact', {nome: entry.nome, historico_json: JSON.stringify(contactLog[key])});
   if(res && res.ok){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
@@ -2651,9 +2693,95 @@ function voltarTabela_(){
   document.getElementById('viewTabs').style.display = '';
   document.getElementById('navTopParados').classList.remove('active');
 }
+// ---------- Contatos registrados ----------
+let contatosPer = 'tudo';
+function todosContatos_(){
+  const porChave = {};
+  DATA.forEach(e => { porChave[normName(e.nome)] = e; });
+  const out = [];
+  Object.keys(contactLog).forEach(key => {
+    (contactLog[key] || []).forEach(c => out.push(Object.assign({key, entry: porChave[key] || null}, c)));
+  });
+  return out.sort((a,b) => {
+    const d = (b.data||'').localeCompare(a.data||'');
+    return d !== 0 ? d : (b.criado_em||'').localeCompare(a.criado_em||'');
+  });
+}
+function renderContatos_(){
+  const body = document.getElementById('contatosBody');
+  if(!body) return;
+  const todos = todosContatos_();
+  const hoje = new Date().toISOString().slice(0,10);
+  const desde = n => new Date(Date.now() - (n-1)*86400000).toISOString().slice(0,10);
+  const semana = todos.filter(c => (c.data||'') >= desde(7));
+  document.getElementById('contatosStats').innerHTML = `
+    <div class="stat-chip"><span>Contatos registrados</span><b>${todos.length}</b><div class="d"><span>${todos.filter(c => c.data === hoje).length} hoje</span></div></div>
+    <div class="stat-chip"><span>Últimos 7 dias</span><b>${semana.length}</b><div class="d"><span>${new Set(semana.map(c => c.key)).size} afiliados diferentes</span></div></div>
+    <div class="stat-chip"><span>Afiliados já contatados</span><b>${new Set(todos.map(c => c.key)).size}</b><div class="d"><span>de ${DATA.length} na base</span></div></div>`;
+
+  const selOferta = document.getElementById('contatosOferta');
+  const ofertaAtual = selOferta.value;
+  const ofertas = Array.from(new Set(todos.map(c => c.oferta).filter(Boolean))).sort();
+  selOferta.innerHTML = '<option value="">+ Oferta</option>' + ofertas.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+  selOferta.value = ofertas.includes(ofertaAtual) ? ofertaAtual : '';
+
+  const at = document.getElementById('contatosAtendente').value;
+  const q = document.getElementById('contatosBusca').value.trim().toLowerCase();
+  const lista = todos.filter(c => {
+    if(contatosPer === 'hoje' && c.data !== hoje) return false;
+    if(contatosPer === '7' && (c.data||'') < desde(7)) return false;
+    if(contatosPer === '30' && (c.data||'') < desde(30)) return false;
+    if(at === '__sem' && c.atendente) return false;
+    if(at && at !== '__sem' && c.atendente !== at) return false;
+    if(selOferta.value && c.oferta !== selOferta.value) return false;
+    if(q){
+      const nome = c.entry ? c.entry.nome : c.key;
+      if(!(nome + ' ' + (c.resumo||'') + ' ' + (c.oferta||'')).toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+  document.querySelectorAll('#viewContatos .chip-select').forEach(el => el.classList.toggle('is-set', el.value !== ''));
+  document.querySelectorAll('#contatosPeriodo .view').forEach(b => b.classList.toggle('on', b.dataset.per === contatosPer));
+
+  if(!lista.length){
+    body.innerHTML = `<tr><td colspan="6" class="row-sub" style="padding:24px 12px;">${todos.length ? 'Nenhum contato com esses filtros.' : 'Nenhum contato registrado ainda. Registre pelo botão "Registrar" na lista de afiliados.'}</td></tr>`;
+    return;
+  }
+  body.innerHTML = lista.map((c, i) => {
+    const e = c.entry;
+    const nome = e ? e.nome : c.key;
+    const status = e ? `<span class="badge b-${e.tier}"><i></i>${tierLabel_(e.tier)}</span>` : '<span class="row-sub">—</span>';
+    const quem = c.atendente
+      ? `<div class="who"><span class="av" style="width:20px;height:20px;font-size:9.5px;background:var(--orange)">${escapeHtml(c.atendente[0].toUpperCase())}</span><span>${escapeHtml(c.atendente)}</span></div>`
+      : '<span class="row-sub">—</span>';
+    return `<tr class="aff-row" data-ci="${i}">
+      <td><span>${escapeHtml(fmtDate_(c.data))}</span><span class="row-sub" style="display:block">${tempoRelativo_(c.data)}</span></td>
+      <td><div class="who"><span class="av" style="background:${avatarColor_(nome)}">${initials_(nome)}</span><span class="row-name">${escapeHtml(nome)}</span></div></td>
+      <td>${status}</td>
+      <td>${c.oferta ? `<span class="tag">${escapeHtml(c.oferta)}</span>` : '<span class="row-sub">—</span>'}</td>
+      <td style="white-space:normal; color:var(--text-2)">${escapeHtml(c.resumo || '') || '<span class="row-sub">sem resumo</span>'}</td>
+      <td>${quem}</td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('tr.aff-row').forEach(tr => tr.addEventListener('click', () => {
+    const c = lista[parseInt(tr.dataset.ci)];
+    if(c.entry){ openDetailModal(c.entry); setDetailTab_('contatos'); }
+  }));
+}
+document.querySelectorAll('#contatosPeriodo .view').forEach(b => b.addEventListener('click', () => { contatosPer = b.dataset.per; renderContatos_(); }));
+['contatosAtendente','contatosOferta'].forEach(id => document.getElementById(id).addEventListener('change', renderContatos_));
+document.getElementById('contatosBusca').addEventListener('input', renderContatos_);
+document.getElementById('navContatos').addEventListener('click', () => {
+  showView_('contatos');
+  renderContatos_();
+});
+
 function showView_(which){ // 'afiliados' | 'vendasDia' | 'canal'
   document.getElementById('afiliadosSection').style.display = which === 'afiliados' ? '' : 'none';
   document.getElementById('viewVendasDia').style.display = which === 'vendasDia' ? '' : 'none';
+  document.getElementById('viewContatos').style.display = which === 'contatos' ? '' : 'none';
+  document.getElementById('navContatos').classList.toggle('active', which === 'contatos');
+  if(which === 'contatos'){ document.getElementById('navTopParados').classList.remove('active'); document.getElementById('crumbView').textContent = 'Contatos registrados'; }
   const tier = document.getElementById('tierFilter').value;
   document.querySelectorAll('.nav-item[data-tier]').forEach(n => n.classList.toggle('active', which === 'afiliados' && !semContatoAtivo && n.dataset.tier === tier));
   document.getElementById('navSemContato').classList.toggle('active', which === 'afiliados' && semContatoAtivo);
