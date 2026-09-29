@@ -346,6 +346,21 @@
     #detailModalBg .modal{max-width:none;}
   }
   .badge i{width:6px; height:6px; border-radius:50%; background:currentColor; flex:none;}
+
+  /* ofertas por afiliado */
+  .of-chip{display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:6px; padding:1px 7px; font-size:12px; margin:1px 4px 1px 0; white-space:nowrap; color:var(--ink); background:transparent; font-weight:500;}
+  .of-chip i, .of-st i{width:6px; height:6px; border-radius:50%; flex:none; background:var(--muted);}
+  .of-chip b{font-weight:600; font-size:11px; color:var(--muted);}
+  .of-chip.of-rodando i{background:var(--green);} .of-chip.of-esfriando i{background:var(--yellow);}
+  .of-chip.of-parou{color:var(--muted);}
+  .of-st{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:500; padding:1px 8px; border-radius:6px; white-space:nowrap;}
+  .of-st i{background:currentColor;}
+  .of-st.of-rodando{background:var(--green-bg); color:var(--green);} .of-st.of-esfriando{background:var(--yellow-bg); color:var(--yellow);} .of-st.of-parou{background:var(--line); color:var(--muted);}
+  .of-up{color:var(--green); font-size:11px; font-weight:600; white-space:nowrap;} .of-down{color:var(--red); font-size:11px; font-weight:600; white-space:nowrap;}
+  table.of-mini{width:100%; border-collapse:collapse; font-size:12px; border:0; background:transparent; border-radius:0;}
+  table.of-mini th{background:transparent; color:var(--muted); text-transform:none; letter-spacing:0; font-size:11px; font-weight:600; padding:4px 6px; border-bottom:1px solid var(--line); text-align:left; position:static;}
+  table.of-mini td{padding:5px 6px; border-bottom:1px solid var(--line); height:auto;}
+  table.of-mini .of-r, table .of-r{text-align:right; font-variant-numeric:tabular-nums;}
 </style>
 <script>
   // aplica o tema antes da primeira pintura da página, pra não piscar claro→escuro
@@ -416,6 +431,10 @@
       <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
       <span class="label">Contatos registrados</span>
       <span class="count" id="countContatos">–</span>
+    </div>
+    <div class="nav-item" id="navPorOferta">
+      <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+      <span class="label">Por oferta</span>
     </div>
     <div class="nav-item" id="navTopParados">
       <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c4.4 0 7-2.9 7-6.5 0-4-3.5-6.5-4.5-10.5-2 2-3 4-3 6-1.5-1-2.5-2.5-2.5-4.5C6 9 5 11.5 5 15.5 5 19.1 7.6 22 12 22z"/></svg></span>
@@ -574,6 +593,35 @@
   </div>
 </div>
 
+<div id="viewPorOferta" style="display:none">
+  <div class="page-head">
+    <h1>Por oferta</h1>
+    <p>Quem da carteira está rodando cada oferta — pra saber a quem mandar criativo novo de um produto. Vem do relatório BuyGoods diário. <b>Rodando</b> = vendeu nos últimos 3 dias · <b>Esfriando</b> = última venda há 3–13 dias · <b>Parou</b> = 14+ dias, contando do último relatório importado. <span id="porOfertaInfo"></span></p>
+  </div>
+  <div id="porOfertaKpis" class="kpis3"></div>
+  <div class="views" id="porOfertaProdutos"></div>
+  <div class="toolbar">
+    <select id="porOfertaStatus" class="chip-select"><option value="ativos">Rodando + esfriando</option><option value="rodando">Só rodando</option><option value="todos">Todos (inclui quem parou)</option></select>
+    <span class="sp"></span>
+    <label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="porOfertaBusca" placeholder="Buscar afiliado"></label>
+  </div>
+  <div class="table-scroll">
+  <table>
+    <thead><tr>
+        <th style="width:22%">Afiliado</th>
+        <th style="width:10%">Status</th>
+        <th style="width:9%" class="of-r">Vendas 7d</th>
+        <th style="width:8%" class="of-r">Vendas 30d</th>
+        <th style="width:10%" class="of-r">Bruto 30d</th>
+        <th style="width:9%" class="of-r">Última venda</th>
+        <th>Outras ofertas ativas</th>
+        <th style="width:13%">Contato</th>
+      </tr></thead>
+    <tbody id="porOfertaBody"></tbody>
+  </table>
+  </div>
+</div>
+
 <div id="viewVendasDia" style="display:none">
   <h2 class="section-title"><span class="bar"></span>Vendas por dia</h2>
   <div class="alert blue">Alimentada pelo mesmo relatório da BuyGoods que você já importa na aba <b>Geral</b> (botão "Importar relatório BuyGoods") — não precisa importar de novo aqui, os dois usam o mesmo arquivo. Esta visão soma as vendas de <b>todos os afiliados</b> por produto, dia a dia — conta só o <b>pedido frontal</b> (upsell, downsell e frete não entram na contagem, só somam no bruto/líquido). <span id="vendasDiaInfo"></span></div>
@@ -691,6 +739,7 @@
         <p class="dsub" id="detailSub"></p>
         <div id="detailTrend" class="dblock"></div>
         <div id="detailLifetime" class="dblock"></div>
+        <div id="detailOfertas" class="dblock"></div>
         <div id="detailObs" class="dblock"></div>
         <div class="dsec">Dados do afiliado</div>
         <dl class="props">
@@ -845,6 +894,8 @@ let revenueNames = loadLS(LS_REVENUE_NAMES, {}); // { nome_norm: 'Nome de exibi�
 let lifetimeStats = loadLS(LS_LIFETIME, {});   // { nome_norm: {nome, produtos, orders, gross, net, commissions, refunds} } — totais desde o início, sem data
 let vendasPorProdutoDia = loadLS(LS_VENDAS_PRODUTO, {}); // { produto: { 'YYYY-MM-DD': vendas } } — soma de todos os afiliados
 let vendasValorPorProdutoDia = loadLS(LS_VENDAS_VALOR, {}); // { produto: { 'YYYY-MM-DD': {gross,refund,chargeback,shipping,taxes} } }
+const LS_AFIL_PROD = 'top_afiliado_produto_v1';
+let afiliadoProdutoDia = loadLS(LS_AFIL_PROD, {}); // { 'YYYY-MM-DD': { nome_norm: { produto: [vendas, bruto] } } }
 let canaisPorDia = loadLS(LS_CANAIS, {}); // { canalKey: { 'YYYY-MM-DD': {vendas,gross,refund,chargeback,shipping,taxes} } }
 let canalLifetime = loadLS(LS_CANAL_LIFETIME, {}); // { canalKey: {orders,gross,net,refunds,taxes,periodo} } — sem data, vindo do Master Affiliates
 let canalMensal = loadLS(LS_CANAL_MENSAL, {}); // { canalKey: { 'YYYY-MM': {orders,gross,net,refunds,taxes} } } — Master Affiliates separado por mês
@@ -1010,6 +1061,7 @@ async function syncFromServer(){
   canaisPorDia = serverCanaisToLocal(j.canaisInterno || {});
   canalLifetime = serverCanalLifetimeToLocal(j.canalLifetime || {});
   canalMensal = serverCanalMensalToLocal(j.canalMensal || {});
+  if(j.afiliadoProduto){ afiliadoProdutoDia = afiliadoProdutoDoServidor_(j.afiliadoProduto); ofertasCache_ = null; saveLS(LS_AFIL_PROD, afiliadoProdutoDia); }
   saveLS(LS_ADDED, addedAffiliates);
   saveLS(LS_CONTACTS, contactLog);
   saveLS(LS_UPDATES, importUpdates);
@@ -1055,7 +1107,10 @@ function buildData(){
   // acrescenta afiliados inseridos manualmente (se não colidir com nome já existente)
   addedAffiliates.forEach(a => {
     const key = normName(a.nome);
-    if(!merged.some(e => normName(e.nome) === key)) merged.push(Object.assign({receita_diaria: revenueDaily[key] || {}, lifetime: lifetimeStats[key] || null}, a));
+    // o import diário (última venda, status, pedidos) também vale pra quem foi inserido à mão —
+    // antes só a receita entrava, e o afiliado aparecia com faturamento mas "sem venda registrada"
+    const upd = importUpdates[key] ? Object.assign({}, importUpdates[key], {nome: a.nome}) : {};
+    if(!merged.some(e => normName(e.nome) === key)) merged.push(Object.assign({receita_diaria: revenueDaily[key] || {}, lifetime: lifetimeStats[key] || null}, a, upd));
   });
 
   // afiliados que só aparecem em algum import (PEDIDOS, faturamento ou base histórica) e ainda não têm contato conhecido
@@ -1576,7 +1631,7 @@ function renderTable(){
     <tr class="aff-row" data-row="${idx}">
       <td><div class="who"><span class="av" style="background:${avatarColor_(e.nome)}">${initials_(e.nome)}</span><div style="min-width:0"><span class="row-name" data-detail="${idx}">${escapeHtml(e.nome)}</span><span class="row-sub">${e.ultima_venda ? 'última venda '+escapeHtml(fmtDate_(e.ultima_venda)) : 'sem venda registrada'}</span></div></div></td>
       <td><span class="badge b-${e.tier}"><i></i>${tierLabel_(e.tier)}</span></td>
-      <td class="hide-sm">${prods.length ? prods.slice(0,3).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join('') + (prods.length>3 ? `<span class="row-sub">+${prods.length-3}</span>` : '') : '<span class="row-sub">—</span>'}</td>
+      <td class="hide-sm">${ofertasCell_(e) || (prods.length ? prods.slice(0,3).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join('') + (prods.length>3 ? `<span class="row-sub">+${prods.length-3}</span>` : '') : '<span class="row-sub">—</span>')}</td>
       <td class="r money">${faturamentoCell}${pctBadge_(e)}</td>
       <td class="r num">${temDias ? e.dias_sem_vender+'d' : '<span class="row-sub">—</span>'}</td>
       <td>${contatoIcones_(e)}</td>
@@ -1894,6 +1949,7 @@ function openDetailModal(entry){
   const temTrend = entry.volume_ago!==null && entry.volume_ago!==undefined && entry.volume_set!==null && entry.volume_set!==undefined;
   document.getElementById('detailTrend').innerHTML = temTrend ? `<label>Tendência</label>${trendCell(entry)}` : '';
   const life = entry.lifetime;
+  document.getElementById('detailOfertas').innerHTML = (h => h ? `<div class="dsec" style="margin-top:0">Ofertas que roda</div>${h}` : '')(ofertasDetalheHtml_(entry));
   document.getElementById('detailLifetime').innerHTML = life
     ? `<label>Histórico geral (base BuyGoods)</label><div>${life.orders} pedido${life.orders===1?'':'s'} · ${fmtMoney(life.gross)} bruto · ${fmtMoney(life.net)} líquido${life.refunds?' · '+fmtMoney(life.refunds)+' em reembolso/chargeback':''}</div>`
     : '';
@@ -2345,6 +2401,7 @@ async function processBuyGoodsImport(arquivos){
   const diasEncontrados = new Set();
   const diasDonos = new Set(); // dias de relatório diário — zerados em todo mundo antes de gravar
   const vistos = new Set();
+  const apDia = {}; // ofertas por afiliado: dia -> nome_norm -> produto -> [vendas (frontal), bruto]
 
   arquivos.forEach(({wb, filename}) => {
     const diaArq = (String(filename).match(/(\d{4}-\d{2}-\d{2})/) || [])[1] || null;
@@ -2416,6 +2473,10 @@ async function processBuyGoodsImport(arquivos){
           rec.daily[dayKey].vendas++;
           rec.daily[dayKey].faturamento += parseFloat(row[hidx['Gross']]) || 0;
           rec.produtos.add(produto);
+          const apD = apDia[dayKey] || (apDia[dayKey] = {}), apA = apD[nkey] || (apD[nkey] = {});
+          const apP = apA[produto] || (apA[produto] = [0, 0]);
+          if(isFrontal_(row, hidx)) apP[0]++;
+          apP[1] = Math.round((apP[1] + (parseFloat(row[hidx['Gross']]) || 0)) * 100) / 100;
         } else if(actionType === 'refund'){
           rec.daily[dayKey].faturamento -= parseFloat(row[hidx['Refund Amount']]) || 0;
         } else if(actionType === 'chargeback'){
@@ -2445,6 +2506,11 @@ async function processBuyGoodsImport(arquivos){
   // só atualiza quem está na carteira da Gaby — o resto do relatório é ignorado
   const foraDaCarteira = Object.keys(byAff).filter(k => !existingKeys.has(k)).length;
   const keys = Array.from(new Set(Object.keys(byAff).filter(k => existingKeys.has(k)).concat(Array.from(afetados))));
+  // ofertas por afiliado: cada dia do relatório é reescrito inteiro (mesma regra do resto)
+  const diasAP = Array.from(new Set(Array.from(diasDonos).concat(Array.from(diasEncontrados)))).sort();
+  diasAP.forEach(d => { const novo = {}; Object.keys(apDia[d] || {}).forEach(k => { if(existingKeys.has(k)) novo[k] = apDia[d][k]; }); afiliadoProdutoDia[d] = novo; });
+  ofertasCache_ = null;
+  saveLS(LS_AFIL_PROD, afiliadoProdutoDia);
   let updatedCount = 0, newCount = 0;
 
   keys.forEach(key => {
@@ -2538,6 +2604,7 @@ async function processBuyGoodsImport(arquivos){
   applyFilters();
   renderImportInfo();
   renderVendasDia();
+  renderPorOferta_();
   showToast(`Importado (${periodoTxt}): ${updatedCount} atualizados, ${foraDaCarteira} fora da carteira (ignorados)` + (APPS_SCRIPT_URL ? ' — sincronizando...' : ' (salvo neste navegador)'));
 
   if(APPS_SCRIPT_URL){
@@ -2553,7 +2620,8 @@ async function processBuyGoodsImport(arquivos){
     const oks = await Promise.all([
       postEmLotes_('importBatch', importBatch), postEmLotes_('importRevenueBatch', revenueBatch),
       postEmLotes_('importVendasProdutoBatch', vendasProdutoBatch), postEmLotes_('importVendasValorBatch', vendasValorBatch),
-      postEmLotes_('importCanaisBatch', canaisBatch)
+      postEmLotes_('importCanaisBatch', canaisBatch),
+      postEmLotes_('importAfiliadoProdutoBatch', diasAP.map(d => ({id: 'ap_' + d, dados_json: JSON.stringify(afiliadoProdutoDia[d] || {})})), 10)
     ]);
     if(oks.every(Boolean)){ syncStatus='ok'; showToast(`Sincronizado: ${keys.length} afiliados no Google Sheets ✓`); }
     else { syncStatus='erro'; showToast('Import salvo localmente, mas não sincronizou com o Sheets ainda'); }
@@ -2573,6 +2641,106 @@ function renderImportInfo(){
 // ---------- Aba "Vendas por dia" ----------
 // Total de vendas da operação inteira (todos os produtos, todos os afiliados incl. internos) por dia —
 // semana e mês são somados aqui no navegador a partir do dado diário, nunca ficam "presos" numa coluna fixa.
+// ---------- Ofertas por afiliado (qual produto cada afiliado está rodando) ----------
+// Vem do mesmo relatório BuyGoods diário: por dia, afiliado e produto guarda [vendas (pedido frontal),
+// bruto]. Status pela última venda do produto, contado a partir do último relatório importado (não de
+// hoje — assim ninguém vira "esfriando" só porque o relatório de ontem ainda não chegou):
+// rodando = vendeu nos últimos 3 dias · esfriando = última venda há 3 a 13 dias · parou = 14+
+const OFERTA_ST_ = {rodando:'Rodando', esfriando:'Esfriando', parou:'Parou'};
+const OFERTA_ORD_ = {rodando:0, esfriando:1, parou:2};
+let ofertasCache_ = null;
+function diasEntre_(a, b){ return Math.round((new Date(b+'T12:00:00') - new Date(a+'T12:00:00')) / 86400000); }
+function ofertasIdx_(){
+  if(ofertasCache_) return ofertasCache_;
+  const dias = Object.keys(afiliadoProdutoDia).filter(d => Object.keys(afiliadoProdutoDia[d] || {}).length).sort();
+  const ref = dias[dias.length-1] || null;
+  const porAff = {}, porProd = {};
+  dias.forEach(d => {
+    const idade = diasEntre_(d, ref), doDia = afiliadoProdutoDia[d];
+    Object.keys(doDia).forEach(k => Object.keys(doDia[k] || {}).forEach(p => {
+      const v = doDia[k][p][0] || 0, g = doDia[k][p][1] || 0;
+      if(!porAff[k]) porAff[k] = {};
+      const a = porAff[k][p] || (porAff[k][p] = {key:k, produto:p, ult:null, v7:0, v7ant:0, v30:0, g30:0});
+      if((v || g) && (!a.ult || d > a.ult)) a.ult = d;
+      if(idade < 7) a.v7 += v; else if(idade < 14) a.v7ant += v;
+      if(idade < 30){ a.v30 += v; a.g30 += g; }
+    }));
+  });
+  Object.keys(porAff).forEach(k => {
+    const lista = Object.values(porAff[k]).filter(a => a.ult);
+    lista.forEach(a => {
+      a.dias = diasEntre_(a.ult, ref);
+      a.status = a.dias <= 2 ? 'rodando' : a.dias <= 13 ? 'esfriando' : 'parou';
+      (porProd[a.produto] = porProd[a.produto] || []).push(a);
+    });
+    porAff[k] = lista.sort(ordemOferta_);
+  });
+  Object.values(porProd).forEach(l => l.sort(ordemOferta_));
+  ofertasCache_ = {ref, desde: dias[0] || null, porAff, porProd};
+  return ofertasCache_;
+}
+function ordemOferta_(a, b){ return OFERTA_ORD_[a.status] - OFERTA_ORD_[b.status] || b.v7 - a.v7 || b.v30 - a.v30 || b.g30 - a.g30; }
+function ofertasDoAfiliado_(nome){ return ofertasIdx_().porAff[normName(nome)] || []; }
+function ofertaChip_(a){
+  const tip = `${OFERTA_ST_[a.status]} · ${a.v7} venda${a.v7===1?'':'s'} nos últimos 7 dias · ${a.v30} em 30 dias · última em ${diaLbl_(a.ult)}`;
+  return `<span class="of-chip of-${a.status}" title="${escapeHtml(tip)}"><i></i>${escapeHtml(a.produto)}${a.v7 ? `<b>${a.v7}</b>` : ''}</span>`;
+}
+// célula de produto da tabela: as ofertas ativas (rodando/esfriando); se todas pararam, as mais recentes
+function ofertasCell_(e, max){
+  const l = ofertasDoAfiliado_(e.nome);
+  if(!l.length) return null;
+  const ativas = l.filter(a => a.status !== 'parou');
+  const base = ativas.length ? ativas : l;
+  const mostrar = base.slice(0, max || 3);
+  return mostrar.map(ofertaChip_).join('') + (base.length > mostrar.length ? `<span class="row-sub"> +${base.length - mostrar.length}</span>` : '');
+}
+function tendOferta_(a){
+  if(!a.v7 && !a.v7ant) return '';
+  if(!a.v7ant) return ' <span class="of-up" title="sem venda nos 7 dias anteriores">novo</span>';
+  const pct = Math.round((a.v7 - a.v7ant) / a.v7ant * 100);
+  if(Math.abs(pct) < 10) return '';
+  return pct > 0 ? ` <span class="of-up" title="vs 7 dias anteriores">▲${pct}%</span>` : ` <span class="of-down" title="vs 7 dias anteriores">▼${Math.abs(pct)}%</span>`;
+}
+function ofertaStatus_(a){ return `<span class="of-st of-${a.status}"><i></i>${OFERTA_ST_[a.status]}</span>`; }
+// bloco do detalhe do afiliado: todas as ofertas dele com os números
+function ofertasDetalheHtml_(e){
+  const l = ofertasDoAfiliado_(e.nome), idx = ofertasIdx_();
+  if(!idx.ref) return '';
+  if(!l.length) return `<div class="row-sub">Nenhuma venda nos relatórios BuyGoods desde ${diaLbl_(idx.desde)}.</div>`;
+  return `<table class="of-mini"><thead><tr><th>Oferta</th><th>Status</th><th class="of-r">7 dias</th><th class="of-r">30 dias</th><th class="of-r">Bruto 30d</th><th class="of-r">Última</th></tr></thead><tbody>${l.map(a =>
+    `<tr><td>${escapeHtml(a.produto)}</td><td>${ofertaStatus_(a)}</td><td class="of-r">${a.v7}${tendOferta_(a)}</td><td class="of-r">${a.v30}</td><td class="of-r">${fmtMoney(a.g30)}</td><td class="of-r">${diaLbl_(a.ult)}</td></tr>`).join('')}</tbody></table>
+    <div class="row-sub" style="margin-top:4px">Pelo relatório BuyGoods · referência: ${diaLbl_(idx.ref)} (último relatório importado)</div>`;
+}
+function afiliadoProdutoDoServidor_(obj){
+  const out = {};
+  Object.keys(obj || {}).forEach(id => {
+    try { out[String(id).replace(/^ap_/, '')] = JSON.parse(obj[id].dados_json || '{}'); } catch(e){}
+  });
+  return out;
+}
+// aba "Por oferta": escolhe o produto e vê quem está rodando
+let porOfertaProduto = '';
+function porOfertaDados_(){
+  const idx = ofertasIdx_();
+  const prods = Object.keys(idx.porProd).map(p => {
+    const l = idx.porProd[p];
+    return {p, rod: l.filter(a => a.status === 'rodando').length, esf: l.filter(a => a.status === 'esfriando').length, tot: l.length};
+  }).sort((a,b) => b.rod - a.rod || b.esf - a.esf || b.tot - a.tot || a.p.localeCompare(b.p));
+  if(!prods.some(x => x.p === porOfertaProduto)) porOfertaProduto = prods.length ? prods[0].p : '';
+  const filtro = (document.getElementById('porOfertaStatus') || {}).value || 'ativos';
+  const busca = normName((document.getElementById('porOfertaBusca') || {}).value || '');
+  const porKey = {}; DATA.forEach(e => { porKey[normName(e.nome)] = e; });
+  const todos = idx.porProd[porOfertaProduto] || [];
+  const lista = todos.filter(a => filtro === 'todos' || (filtro === 'rodando' ? a.status === 'rodando' : a.status !== 'parou'))
+    .map(a => Object.assign({entry: porKey[a.key] || null, nomeLbl: (porKey[a.key] && porKey[a.key].nome) || (importUpdates[a.key] && importUpdates[a.key].nome) || a.key}, a))
+    .filter(a => !busca || normName(a.nomeLbl).includes(busca));
+  const cont = st => todos.filter(a => a.status === st).length;
+  return {idx, prods, lista, rod: cont('rodando'), esf: cont('esfriando'), par: cont('parou'), v7: todos.reduce((s,a) => s + a.v7, 0)};
+}
+function outrasOfertas_(a){
+  return ofertasDoAfiliado_(a.nomeLbl).filter(o => o.produto !== a.produto && o.status !== 'parou').slice(0, 3).map(ofertaChip_).join('') || '<span class="row-sub">—</span>';
+}
+
 function diaLbl_(dayKey){
   const [, m, d] = dayKey.split('-');
   return `${d}/${m}`;
@@ -2822,6 +2990,9 @@ function showView_(which){ // 'afiliados' | 'vendasDia' | 'canal'
   document.getElementById('afiliadosSection').style.display = which === 'afiliados' ? '' : 'none';
   document.getElementById('viewVendasDia').style.display = which === 'vendasDia' ? '' : 'none';
   document.getElementById('viewContatos').style.display = which === 'contatos' ? '' : 'none';
+  document.getElementById('viewPorOferta').style.display = which === 'oferta' ? '' : 'none';
+  document.getElementById('navPorOferta').classList.toggle('active', which === 'oferta');
+  if(which === 'oferta'){ document.getElementById('navTopParados').classList.remove('active'); document.getElementById('crumbView').textContent = 'Por oferta'; }
   document.getElementById('navContatos').classList.toggle('active', which === 'contatos');
   if(which === 'contatos'){ document.getElementById('navTopParados').classList.remove('active'); document.getElementById('crumbView').textContent = 'Contatos registrados'; }
   const tier = document.getElementById('tierFilter').value;
@@ -2831,6 +3002,35 @@ function showView_(which){ // 'afiliados' | 'vendasDia' | 'canal'
   if(which === 'vendasDia') document.getElementById('navTopParados').classList.remove('active');
   if(which === 'vendasDia') document.getElementById('crumbView').textContent = 'Vendas por dia';
 }
+
+function renderPorOferta_(){
+  const body = document.getElementById('porOfertaBody');
+  if(!body) return;
+  const D = porOfertaDados_();
+  document.getElementById('porOfertaInfo').textContent = D.idx.ref ? `Relatórios de ${diaLbl_(D.idx.desde)} a ${diaLbl_(D.idx.ref)}.` : '';
+  document.getElementById('porOfertaProdutos').innerHTML = D.prods.map(x => `<button class="view ${x.p === porOfertaProduto ? 'on' : ''}" data-prod="${escapeHtml(x.p)}">${escapeHtml(x.p)}<span class="ct" title="afiliados rodando">${x.rod}</span></button>`).join('');
+  document.querySelectorAll('#porOfertaProdutos [data-prod]').forEach(b => b.addEventListener('click', () => { porOfertaProduto = b.dataset.prod; renderPorOferta_(); }));
+  document.getElementById('porOfertaKpis').innerHTML = porOfertaProduto ? `
+    <div class="stat-chip"><span>Rodando ${escapeHtml(porOfertaProduto)}</span><b>${D.rod}</b><div class="d"><span>venderam nos últimos 3 dias</span></div></div>
+    <div class="stat-chip"><span>Esfriando</span><b>${D.esf}</b><div class="d"><span>última venda há 3–13 dias</span></div></div>
+    <div class="stat-chip"><span>Vendas nos últimos 7 dias</span><b>${D.v7}</b><div class="d"><span>${D.par} da carteira pararam</span></div></div>` : '';
+  if(!D.idx.ref){ body.innerHTML = '<tr><td colspan="8" class="row-sub">Sem dado ainda — importe os relatórios BuyGoods diários.</td></tr>'; return; }
+  if(!D.lista.length){ body.innerHTML = '<tr><td colspan="8" class="row-sub">Ninguém nesse filtro.</td></tr>'; return; }
+  body.innerHTML = D.lista.map((a, i) => `<tr class="aff-row" data-oi="${i}">
+      <td><div class="who"><span class="av" style="background:${avatarColor_(a.nomeLbl)}">${initials_(a.nomeLbl)}</span><div style="min-width:0"><span class="row-name">${escapeHtml(a.nomeLbl)}</span><span class="row-sub">${a.dias === 0 ? 'vendeu no último relatório' : 'última venda há ' + a.dias + 'd'}</span></div></div></td>
+      <td>${ofertaStatus_(a)}</td>
+      <td class="of-r num">${a.v7}${tendOferta_(a)}</td>
+      <td class="of-r num">${a.v30}</td>
+      <td class="of-r num">${fmtMoney(a.g30)}</td>
+      <td class="of-r num">${diaLbl_(a.ult)}</td>
+      <td>${outrasOfertas_(a)}</td>
+      <td>${a.entry ? contatoIcones_(a.entry) : '<span class="row-sub">—</span>'}</td>
+    </tr>`).join('');
+  body.querySelectorAll('tr[data-oi]').forEach(tr => tr.addEventListener('click', () => { const a = D.lista[+tr.dataset.oi]; if(a.entry) openDetailModal(a.entry); }));
+}
+document.getElementById('porOfertaStatus').addEventListener('change', renderPorOferta_);
+document.getElementById('porOfertaBusca').addEventListener('input', renderPorOferta_);
+document.getElementById('navPorOferta').addEventListener('click', () => { showView_('oferta'); renderPorOferta_(); });
 
 document.getElementById('navVendasDia').addEventListener('click', () => {
   showView_('vendasDia');

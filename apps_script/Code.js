@@ -57,6 +57,7 @@ const SHEET_VENDAS_VALOR = 'VendasValorProdutoDia';
 const SHEET_CANAIS = 'CanaisInternoDia';
 const SHEET_CANAL_LIFETIME = 'CanalLifetime';
 const SHEET_CANAL_MENSAL = 'CanalMensal';
+const SHEET_AFIL_PROD = 'AfiliadoProdutoDia'; // ofertas por afiliado: 1 linha por dia de relatório (id = ap_AAAA-MM-DD), JSON {afiliado: {produto: [vendas, bruto]}}
 
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -347,6 +348,15 @@ function deleteRow_(sheetName, keyField, keyValue) {
 /**
  * GET ?action=list  -> retorna tudo (added, contacts, imports) num JSON só
  */
+function afiliadoProdutoRecente_(dias) {
+  // só os últimos N dias — é o que a tela usa (status/7d/30d) e segura o tamanho do list
+  const corte = 'ap_' + new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10);
+  const todos = sheetToObjectsBy_(SHEET_AFIL_PROD, 'id');
+  const out = {};
+  Object.keys(todos).forEach(k => { if (String(k) >= corte) out[k] = todos[k]; });
+  return out;
+}
+
 function doGet(e) {
   const action = e.parameter.action || 'list';
   let payload;
@@ -363,6 +373,7 @@ function doGet(e) {
       canaisInterno: sheetToObjectsBy_(SHEET_CANAIS, 'canal'),
       canalLifetime: sheetToObjectsBy_(SHEET_CANAL_LIFETIME, 'canal'),
       canalMensal: sheetToObjectsBy_(SHEET_CANAL_MENSAL, 'id'),
+      afiliadoProduto: afiliadoProdutoRecente_(120),
       ok: true
     };
   } else {
@@ -382,7 +393,14 @@ function doPost(e) {
   let result = { ok: true };
 
   try {
-    if (action === 'addAffiliate') {
+    if (action === 'importAfiliadoProdutoBatch') {
+      // body.data = array de {id: 'ap_AAAA-MM-DD', dados_json} — o dia do relatório é reescrito inteiro
+      const arr = (body.data || []).filter(d => d && d.id).map(d => ({
+        id: d.id, dados_json: d.dados_json || '{}', atualizado_em: now
+      }));
+      bulkMergeSheet_(SHEET_AFIL_PROD, 'id', arr);
+      result.processed = arr.length;
+    } else if (action === 'addAffiliate') {
       const d = body.data;
       const key = normName_(d.nome);
       upsertRow_(SHEET_ADDED, 'nome_norm', key, {
