@@ -57,6 +57,7 @@ const SHEET_VENDAS_VALOR = 'VendasValorProdutoDia';
 const SHEET_CANAIS = 'CanaisInternoDia';
 const SHEET_CANAL_LIFETIME = 'CanalLifetime';
 const SHEET_CANAL_MENSAL = 'CanalMensal';
+const SHEET_BG_DIA = 'BuyGoodsDia'; // relatório BuyGoods resumido por afiliado (todos, não só a carteira): 1 linha por dia (id = bg_AAAA-MM-DD), JSON {affiliate_id: {n, v, f, p}}
 const SHEET_AFIL_PROD = 'AfiliadoProdutoDia'; // ofertas por afiliado: 1 linha por dia de relatório (id = ap_AAAA-MM-DD), JSON {afiliado: {produto: [vendas, bruto]}}
 
 function setup() {
@@ -348,10 +349,10 @@ function deleteRow_(sheetName, keyField, keyValue) {
 /**
  * GET ?action=list  -> retorna tudo (added, contacts, imports) num JSON só
  */
-function afiliadoProdutoRecente_(dias) {
+function afiliadoProdutoRecente_(dias, sheet, prefixo) {
   // só os últimos N dias — é o que a tela usa (status/7d/30d) e segura o tamanho do list
-  const corte = 'ap_' + new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10);
-  const todos = sheetToObjectsBy_(SHEET_AFIL_PROD, 'id');
+  const corte = (prefixo || 'ap_') + new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10);
+  const todos = sheetToObjectsBy_(sheet || SHEET_AFIL_PROD, 'id');
   const out = {};
   Object.keys(todos).forEach(k => { if (String(k) >= corte) out[k] = todos[k]; });
   return out;
@@ -374,6 +375,7 @@ function doGet(e) {
       canalLifetime: sheetToObjectsBy_(SHEET_CANAL_LIFETIME, 'canal'),
       canalMensal: sheetToObjectsBy_(SHEET_CANAL_MENSAL, 'id'),
       afiliadoProduto: afiliadoProdutoRecente_(120),
+      buyGoodsDia: afiliadoProdutoRecente_(120, SHEET_BG_DIA, 'bg_'),
       ok: true
     };
   } else {
@@ -399,6 +401,13 @@ function doPost(e) {
         id: d.id, dados_json: d.dados_json || '{}', atualizado_em: now
       }));
       bulkMergeSheet_(SHEET_AFIL_PROD, 'id', arr);
+      result.processed = arr.length;
+    } else if (action === 'importBuyGoodsDiaBatch') {
+      // body.data = array de {id: 'bg_AAAA-MM-DD', dados_json} — o dia do relatório inteiro, por afiliado
+      const arr = (body.data || []).filter(d => d && d.id).map(d => ({
+        id: d.id, dados_json: d.dados_json || '{}', atualizado_em: now
+      }));
+      bulkMergeSheet_(SHEET_BG_DIA, 'id', arr);
       result.processed = arr.length;
     } else if (action === 'addAffiliate') {
       const d = body.data;

@@ -361,6 +361,10 @@
   table.of-mini th{background:transparent; color:var(--muted); text-transform:none; letter-spacing:0; font-size:11px; font-weight:600; padding:4px 6px; border-bottom:1px solid var(--line); text-align:left; position:static;}
   table.of-mini td{padding:5px 6px; border-bottom:1px solid var(--line); height:auto;}
   table.of-mini .of-r, table .of-r{text-align:right; font-variant-numeric:tabular-nums;}
+  .bg-sug-banner{border:1px solid var(--line); border-left:3px solid var(--yellow); background:var(--yellow-bg); color:var(--ink); border-radius:8px; padding:9px 12px; font-size:12.5px; margin:0 0 14px;}
+  .bg-sug-banner a{color:var(--ink); text-decoration:underline; cursor:pointer;}
+  .bg-vinc{margin:6px 0 10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12px;}
+  .bg-vinc .btn{height:26px; font-size:12px; padding:0 8px;}
 </style>
 <script>
   // aplica o tema antes da primeira pintura da página, pra não piscar claro→escuro
@@ -471,6 +475,7 @@
     <p>Quem vendeu, quem parou e com quem falar hoje. <span id="lastImportInfo"></span></p>
   </div>
   <div id="headerStats"></div>
+  <div id="bgSugestoesBanner"></div>
 
   <div class="period-tabs" id="mainViewTabs" style="display:none">
     <button class="active" data-view="tabela">Geral</button>
@@ -677,7 +682,7 @@
       </div>
       <div>
         <label>Usuário/e-mail BuyGoods</label>
-        <input type="text" id="mBuygoods" placeholder="Ex: joao@email.com">
+        <input type="text" id="mBuygoods" list="bgLista" placeholder="Nome ou ID no relatório BuyGoods">
       </div>
       <div>
         <label>Atendente que falou com o afiliado</label>
@@ -745,12 +750,14 @@
         <dl class="props">
           <dt>Telefone</dt><dd><input type="text" id="dTelefone" placeholder="Adicionar…"></dd>
           <dt>Telegram</dt><dd><input type="text" id="dTelegram" placeholder="Adicionar…"></dd>
-          <dt>Usuário BuyGoods</dt><dd><input type="text" id="dBuygoods" placeholder="Adicionar…"></dd>
+          <dt>Usuário BuyGoods</dt><dd><input type="text" id="dBuygoods" list="bgLista" placeholder="Nome ou ID no relatório BuyGoods"></dd>
           <dt>Nome no dash</dt><dd><input type="text" id="dNomeDash" placeholder="Adicionar…"></dd>
           <dt>Tráfego</dt><dd><select id="dTrafego"><option value="">—</option><option value="Facebook">Facebook</option><option value="YouTube">YouTube</option><option value="Outro">Outro</option></select></dd>
           <dt>CPA</dt><dd><input type="text" id="dCpa" placeholder="Adicionar…"></dd>
           <dt>Atendente</dt><dd><select id="dAtendente"><option value="">—</option><option value="Gaby">Gaby</option></select></dd>
         </dl>
+        <div id="dBgSugestao" class="bg-vinc"></div>
+        <datalist id="bgLista"></datalist>
         <div class="props-save"><span class="row-sub" id="dDirty"></span><button class="btn pri" id="dSaveMeta">Salvar dados</button></div>
       </section>
       <section data-dpane="contatos" hidden>
@@ -895,6 +902,8 @@ let lifetimeStats = loadLS(LS_LIFETIME, {});   // { nome_norm: {nome, produtos, 
 let vendasPorProdutoDia = loadLS(LS_VENDAS_PRODUTO, {}); // { produto: { 'YYYY-MM-DD': vendas } } — soma de todos os afiliados
 let vendasValorPorProdutoDia = loadLS(LS_VENDAS_VALOR, {}); // { produto: { 'YYYY-MM-DD': {gross,refund,chargeback,shipping,taxes} } }
 const LS_AFIL_PROD = 'top_afiliado_produto_v1';
+const LS_BG_DIA = 'top_buygoods_dia_v1';
+let bgDia = loadLS(LS_BG_DIA, {}); // { 'YYYY-MM-DD': { affiliate_id: {n: nome no relatório, v: pedidos, f: faturamento líquido de reembolso, p: {produto: [vendas frontais, bruto]}} } }
 let afiliadoProdutoDia = loadLS(LS_AFIL_PROD, {}); // { 'YYYY-MM-DD': { nome_norm: { produto: [vendas, bruto] } } }
 let canaisPorDia = loadLS(LS_CANAIS, {}); // { canalKey: { 'YYYY-MM-DD': {vendas,gross,refund,chargeback,shipping,taxes} } }
 let canalLifetime = loadLS(LS_CANAL_LIFETIME, {}); // { canalKey: {orders,gross,net,refunds,taxes,periodo} } — sem data, vindo do Master Affiliates
@@ -1062,6 +1071,7 @@ async function syncFromServer(){
   canalLifetime = serverCanalLifetimeToLocal(j.canalLifetime || {});
   canalMensal = serverCanalMensalToLocal(j.canalMensal || {});
   if(j.afiliadoProduto){ afiliadoProdutoDia = afiliadoProdutoDoServidor_(j.afiliadoProduto); ofertasCache_ = null; saveLS(LS_AFIL_PROD, afiliadoProdutoDia); }
+  if(j.buyGoodsDia){ bgDia = {}; Object.keys(j.buyGoodsDia).forEach(id => { try { bgDia[String(id).replace(/^bg_/, '')] = JSON.parse(j.buyGoodsDia[id].dados_json || '{}'); } catch(e){} }); saveLS(LS_BG_DIA, bgDia); }
   saveLS(LS_ADDED, addedAffiliates);
   saveLS(LS_CONTACTS, contactLog);
   saveLS(LS_UPDATES, importUpdates);
@@ -1611,6 +1621,7 @@ function renderTopParadosCards(){
 }
 
 function renderTable(){
+  renderBgSugestoes_();
   const start = (currentPage-1)*PAGE_SIZE;
   const pageItems = currentList.slice(start, start+PAGE_SIZE);
   const tbody = document.getElementById('tableBody');
@@ -1837,6 +1848,8 @@ document.getElementById('mSave').addEventListener('click', async () => {
   if(res && res.ok && metaOk){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
   else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou — ficou salvo só neste navegador por enquanto'); }
   renderSyncBadge();
+  // afiliado novo já pode ter vendido antes de entrar na carteira (pelo nome ou pelo vínculo)
+  await reaplicarVinculos_();
 });
 
 async function deleteAffiliate(entry){
@@ -1962,6 +1975,7 @@ function openDetailModal(entry){
   document.getElementById('dTrafego').value = meta.trafego || '';
   document.getElementById('dCpa').value = meta.cpa || '';
   document.getElementById('dBuygoods').value = meta.buygoods_user || '';
+  renderBgVinculo_(entry);
   document.getElementById('dAtendente').value = meta.atendente || '';
   document.getElementById('dDirty').textContent = '';
 
@@ -2023,6 +2037,7 @@ document.querySelectorAll('#periodTabs button').forEach(btn => {
 document.getElementById('dSaveMeta').addEventListener('click', async () => {
   if(!detailTarget) return;
   const key = normName(detailTarget.nome);
+  const vincAntes = (affiliateMeta[key] || {}).buygoods_user || '';
   const meta = {
     telefone: document.getElementById('dTelefone').value.trim(),
     telegram: document.getElementById('dTelegram').value.trim(),
@@ -2042,6 +2057,7 @@ document.getElementById('dSaveMeta').addEventListener('click', async () => {
   if(res && res.ok){ syncStatus='ok'; showToast('Sincronizado com Google Sheets ✓'); }
   else if(APPS_SCRIPT_URL){ syncStatus='erro'; showToast('Não sincronizou — ficou salvo só neste navegador por enquanto'); }
   renderSyncBadge();
+  if(meta.buygoods_user !== vincAntes) await reaplicarVinculos_();
 });
 
 function renderDetailChart(entry, period){
@@ -2390,6 +2406,213 @@ async function postEmLotes_(action, arr, tam){
   }
   return ok;
 }
+// ---------- Carteira × relatório BuyGoods ----------
+// O relatório identifica o afiliado pelo Affiliate Name e por um Affiliate Id — que é por conta de produto
+// (a mesma pessoa aparece com vários IDs). Quem está na carteira com outro nome (ex: "Diogo Schirner AFF"
+// x "Diogo Schirner") é ligado pelo campo "Usuário BuyGoods" do perfil: o nome como aparece no relatório
+// (pega todos os IDs dele) ou um ID específico.
+function vinculoBg_(v){
+  const txt = String(v || '').trim();
+  if(!txt) return null;
+  const mId = txt.match(/^\s*(\d+)\s*$/) || txt.match(/\bID\s*:?\s*(\d+)/i);
+  const nome = txt.replace(/[·|(,-]?\s*\bID\s*:?\s*\d+\s*\)?/i, '').trim();
+  return {id: mId ? mId[1] : null, nome: nome && !/^\d+$/.test(nome) ? normName(nome) : ''};
+}
+function mapaCarteiraBg_(){
+  const porId = {}, porNome = {};
+  DATA.forEach(e => { const k = normName(e.nome); if(k && !porNome[k]) porNome[k] = k; });
+  // vínculo explícito ganha do nome igual
+  DATA.forEach(e => {
+    const k = normName(e.nome), v = vinculoBg_((affiliateMeta[k] || {}).buygoods_user);
+    if(!v) return;
+    if(v.id) porId[v.id] = k;
+    if(v.nome) porNome[v.nome] = k;
+  });
+  return (id, nome) => porId[id] || porNome[normName(nome)] || null;
+}
+// refaz os dados por afiliado da carteira (última venda, status, faturamento, ofertas) nos dias dados,
+// a partir do relatório guardado em bgDia
+function reaplicarCarteira_(dias){
+  const diasSet = new Set(dias);
+  const resolve = mapaCarteiraBg_();
+  const byAff = {}, apDia = {}, fora = new Set();
+  dias.forEach(dayKey => {
+    const doDia = bgDia[dayKey] || {};
+    afiliadoProdutoDia[dayKey] = {};
+    Object.keys(doDia).forEach(id => {
+      const b = doDia[id], nkey = normName(b.n);
+      if(!nkey || isExcludedName(nkey)) return;
+      const key = resolve(id, b.n);
+      if(!key){ if(b.v) fora.add(id); return; }
+      if(!byAff[key]) byAff[key] = {nome: (DATA.find(e => normName(e.nome) === key) || {}).nome || b.n, produtos: new Set(), daily: {}};
+      const rec = byAff[key];
+      const d = rec.daily[dayKey] || (rec.daily[dayKey] = {vendas: 0, faturamento: 0});
+      d.vendas += b.v || 0; d.faturamento += b.f || 0;
+      Object.keys(b.p || {}).forEach(pr => {
+        rec.produtos.add(pr);
+        const ap = afiliadoProdutoDia[dayKey][key] || (afiliadoProdutoDia[dayKey][key] = {});
+        const x = ap[pr] || (ap[pr] = [0, 0]);
+        x[0] += b.p[pr][0] || 0; x[1] = Math.round((x[1] + (b.p[pr][1] || 0)) * 100) / 100;
+      });
+    });
+  });
+  ofertasCache_ = null;
+  saveLS(LS_AFIL_PROD, afiliadoProdutoDia);
+
+  const afetados = new Set();
+  dias.forEach(dia => {
+    Object.keys(revenueDaily).forEach(k => { if(dia in revenueDaily[k]){ delete revenueDaily[k][dia]; afetados.add(k); } });
+    Object.keys(importUpdates).forEach(k => { const dd = importUpdates[k].dados_diarios; if(dd && dia in dd){ delete dd[dia]; afetados.add(k); } });
+  });
+  const keys = Array.from(new Set(Object.keys(byAff).concat(Array.from(afetados))));
+  let updatedCount = 0;
+  keys.forEach(key => {
+    const rec = byAff[key] || {nome: (importUpdates[key] && importUpdates[key].nome) || revenueNames[key] || key, produtos: new Set(), daily: {}};
+    const produtos = Array.from(rec.produtos);
+
+    let upd = importUpdates[key];
+    if(!upd){
+      upd = {
+        nome: rec.nome, volume_ago:null, volume_set:null, net_ago:null, net_set:null, tem_dado_custo:false,
+        ultima_venda:null, dias_sem_vender:null, tier:'sem_venda_2026',
+        confirmado:false, total_pedidos:0, volume_total:0, produtos:[], streak_diario:0, dados_diarios:{}
+      };
+    }
+    upd.ultima_venda = fmtDate_(upd.ultima_venda) || null; // sanitiza caso tenha vindo do Sheets como timestamp
+    if(!upd.dados_diarios) upd.dados_diarios = {};
+    if(!revenueDaily[key]) revenueDaily[key] = {};
+
+    Object.keys(rec.daily).forEach(dayKey => {
+      const d = rec.daily[dayKey];
+      const faturamento = Math.round(d.faturamento*100)/100;
+      upd.dados_diarios[dayKey] = {orders: d.vendas, volume: faturamento};
+      revenueDaily[key][dayKey] = {vendas: d.vendas, faturamento, produtos};
+    });
+    if(byAff[key]) revenueNames[key] = rec.nome;
+
+    // última venda: o dia mais recente com pedido; se a anterior caiu num dia refeito agora e sem pedido, recalcula
+    const diasComVenda = Object.keys(upd.dados_diarios).filter(d => (upd.dados_diarios[d].orders||0) > 0).sort();
+    const maxDados = diasComVenda.length ? diasComVenda[diasComVenda.length-1] : null;
+    if(upd.ultima_venda && diasSet.has(upd.ultima_venda) && !((upd.dados_diarios[upd.ultima_venda]||{}).orders > 0)){
+      const base = BASE_DATA.find(e => normName(e.nome) === key);
+      upd.ultima_venda = maxDados || (base && fmtDate_(base.ultima_venda)) || null;
+    }
+    if(maxDados && (!upd.ultima_venda || maxDados > upd.ultima_venda)) upd.ultima_venda = maxDados;
+
+    // totais sempre recalculados a partir do histórico completo acumulado (idempotente — reimportar não duplica)
+    let totalPedidos = 0, volumeTotal = 0;
+    Object.values(upd.dados_diarios).forEach(d => { totalPedidos += d.orders||0; volumeTotal += d.volume||0; });
+    upd.total_pedidos = totalPedidos;
+    upd.volume_total = Math.round(volumeTotal*100)/100;
+    upd.confirmado = totalPedidos > 0;
+
+    const prodSet = new Set(upd.produtos||[]);
+    produtos.forEach(p => prodSet.add(p));
+    upd.produtos = Array.from(prodSet);
+    const {dias, tier} = recalcTierFromLastSale_(upd.ultima_venda);
+    upd.dias_sem_vender = dias;
+    upd.tier = tier;
+    upd.streak_diario = streakDiario_(upd.dados_diarios, upd.ultima_venda ? new Date(upd.ultima_venda) : null);
+    upd.nome = upd.nome || rec.nome;
+    importUpdates[key] = upd;
+
+    if(byAff[key]) updatedCount++;
+  });
+
+
+  saveLS(LS_UPDATES, importUpdates);
+  saveLS(LS_REVENUE, revenueDaily);
+  saveLS(LS_REVENUE_NAMES, revenueNames);
+  return {keys, updatedCount, foraDaCarteira: fora.size, afetados};
+}
+async function sincronizarCarteira_(keys, dias){
+  if(!APPS_SCRIPT_URL) return true;
+  const importBatch = keys.map(key => { const rec = Object.assign({}, importUpdates[key]); rec.dados_diarios = JSON.stringify(rec.dados_diarios || {}); return rec; });
+  const revenueBatch = keys.map(key => ({nome: revenueNames[key] || importUpdates[key].nome || key, dados_json: JSON.stringify(revenueDaily[key] || {})}));
+  const oks = await Promise.all([
+    postEmLotes_('importBatch', importBatch), postEmLotes_('importRevenueBatch', revenueBatch),
+    postEmLotes_('importAfiliadoProdutoBatch', dias.map(d => ({id: 'ap_' + d, dados_json: JSON.stringify(afiliadoProdutoDia[d] || {})})), 10)
+  ]);
+  return oks.every(Boolean);
+}
+// depois de vincular/desvincular alguém: refaz a carteira em todos os dias guardados
+async function reaplicarVinculos_(){
+  const dias = Object.keys(bgDia).sort();
+  if(!dias.length) return;
+  const {keys} = reaplicarCarteira_(dias);
+  DATA = buildData();
+  applyFilters();
+  renderPorOferta_();
+  if(detailTarget && detailModalBg.classList.contains('show')){ const e = DATA.find(x => normName(x.nome) === normName(detailTarget.nome)); if(e) openDetailModal(e); }
+  if(!keys.length) return;
+  const ok = await sincronizarCarteira_(keys, dias);
+  syncStatus = ok ? 'ok' : 'erro'; renderSyncBadge();
+  showToast(ok ? 'Vendas do BuyGoods reatribuídas e sincronizadas ✓' : 'Vendas reatribuídas, mas não sincronizou com o Sheets ainda');
+}
+// sugestões: afiliado da carteira sem venda no BuyGoods que tem um nome parecido no relatório
+const PALAVRAS_SOLTAS_ = new Set(['aff','afiliado','afiliada','ads','fb','yt','oficial','br','top','tiger']);
+function tokensNome_(n){ return normName(n).split(' ').filter(t => t && !PALAVRAS_SOLTAS_.has(t)); }
+function bgAfiliados_(){
+  // agrupado pelo nome do relatório — a mesma pessoa tem um Affiliate Id por conta de produto
+  const out = {};
+  Object.keys(bgDia).forEach(d => Object.keys(bgDia[d] || {}).forEach(id => {
+    const b = bgDia[d][id]; if(!b || !b.n) return;
+    const nk = normName(b.n); if(!nk || isExcludedName(nk)) return;
+    const o = out[nk] || (out[nk] = {nk, n: String(b.n).replace(/\s+/g, ' ').trim(), ids: new Set(), v: 0, ult: null});
+    o.ids.add(id); o.v += b.v || 0; if(b.v && (!o.ult || d > o.ult)) o.ult = d;
+  }));
+  return out;
+}
+function bgLigadoA_(g, resolve){ for(const id of g.ids){ const k = resolve(id, g.n); if(k) return k; } return null; }
+function sugestoesBg_(entry, bgs, usados){
+  const t = tokensNome_(entry.nome);
+  if(!t.length) return [];
+  return Object.values(bgs).filter(b => {
+    if(usados.has(b.nk) || !b.v) return false;
+    const u = tokensNome_(b.n);
+    if(!u.length || u[0] !== t[0]) return false;
+    if(t.length === 1 || u.length === 1) return true;
+    return t.slice(1).some(x => u.includes(x));
+  }).sort((a,b) => b.v - a.v).slice(0, 4);
+}
+function candidatosVinculo_(){
+  const bgs = bgAfiliados_(), resolve = mapaCarteiraBg_();
+  const usados = new Set(), ligadas = new Set();
+  Object.values(bgs).forEach(g => { const k = bgLigadoA_(g, resolve); if(k){ usados.add(g.nk); ligadas.add(k); } });
+  const semVinculo = DATA.filter(e => !ligadas.has(normName(e.nome)));
+  return {bgs, usados, lista: semVinculo.map(e => ({e, sug: sugestoesBg_(e, bgs, usados)})).filter(x => x.sug.length)};
+}
+function bgLabel_(g){ return g.n; }
+function renderBgSugestoes_(){
+  const el = document.getElementById('bgSugestoesBanner');
+  if(!el) return;
+  const {lista} = candidatosVinculo_();
+  if(!lista.length){ el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="bg-sug-banner"><b>${lista.length} ${lista.length === 1 ? 'afiliado da carteira pode estar' : 'afiliados da carteira podem estar'} com outro nome no BuyGoods.</b> Abra o perfil pra vincular: ${lista.map((x, i) => `<a data-bgsug="${i}">${escapeHtml(x.e.nome)}</a>`).join(', ')}</div>`;
+  el.querySelectorAll('[data-bgsug]').forEach(a => a.addEventListener('click', () => openDetailModal(lista[+a.dataset.bgsug].e)));
+}
+function renderBgVinculo_(entry){
+  const el = document.getElementById('dBgSugestao');
+  if(!el) return;
+  const {bgs, usados} = candidatosVinculo_();
+  const dl = document.getElementById('bgLista');
+  if(dl) dl.innerHTML = Object.values(bgs).sort((a,b) => a.n.localeCompare(b.n)).map(g => `<option value="${escapeHtml(bgLabel_(g))}">${g.v} pedidos · ID ${escapeHtml(Array.from(g.ids).join(', '))}</option>`).join('');
+  const key = normName(entry.nome), resolve = mapaCarteiraBg_();
+  const ligados = Object.values(bgs).filter(g => bgLigadoA_(g, resolve) === key);
+  if(ligados.length){
+    el.innerHTML = `<span class="row-sub">No relatório BuyGoods: ${ligados.map(b => `<b>${escapeHtml(bgLabel_(b))}</b>`).join(', ')}</span>`;
+    return;
+  }
+  const sug = sugestoesBg_(entry, bgs, usados);
+  el.innerHTML = sug.length
+    ? `<span class="row-sub">Sem venda com esse nome no relatório. Parece ser:</span> ${sug.map((b, i) => `<button class="btn" data-bgv="${i}" title="${b.v} pedidos · última venda ${b.ult ? diaLbl_(b.ult) : '—'} · ${b.ids.size} ${b.ids.size === 1 ? 'conta' : 'contas'} (ID ${Array.from(b.ids).join(', ')})">${escapeHtml(bgLabel_(b))} · vincular</button>`).join(' ')}`
+    : `<span class="row-sub">Sem venda com esse nome no relatório BuyGoods. Se ele usa outro nome lá, preencha acima o nome ou o ID do relatório.</span>`;
+  el.querySelectorAll('[data-bgv]').forEach(btn => btn.addEventListener('click', () => {
+    document.getElementById('dBuygoods').value = bgLabel_(sug[+btn.dataset.bgv]);
+    document.getElementById('dSaveMeta').click();
+  }));
+}
+
 async function processBuyGoodsImport(arquivos){
   if(!Array.isArray(arquivos)) arquivos = [{wb: arguments[0], filename: arguments[1]}];
   arquivos = arquivos.slice().sort((a,b) => String(a.filename).localeCompare(String(b.filename)));
@@ -2401,7 +2624,7 @@ async function processBuyGoodsImport(arquivos){
   const diasEncontrados = new Set();
   const diasDonos = new Set(); // dias de relatório diário — zerados em todo mundo antes de gravar
   const vistos = new Set();
-  const apDia = {}; // ofertas por afiliado: dia -> nome_norm -> produto -> [vendas (frontal), bruto]
+  const bgNovo = {}; // dia -> affiliate_id -> {n, v, f, p} — todo mundo do relatório, a carteira é filtrada depois
 
   arquivos.forEach(({wb, filename}) => {
     const diaArq = (String(filename).match(/(\d{4}-\d{2}-\d{2})/) || [])[1] || null;
@@ -2465,22 +2688,21 @@ async function processBuyGoodsImport(arquivos){
 
         if(!nome || !nkey || isExcludedName(nkey)) continue; // daqui pra baixo é só o ranking por afiliado — precisa de nome
 
-        if(!byAff[nkey]) byAff[nkey] = {nome, produtos:new Set(), daily:{}};
-        const rec = byAff[nkey];
-        if(!rec.daily[dayKey]) rec.daily[dayKey] = {vendas:0, faturamento:0};
-
+        const idRaw = 'Affiliate Id' in hidx ? row[hidx['Affiliate Id']] : null;
+        const bgId = (idRaw !== null && idRaw !== undefined && idRaw !== '') ? String(idRaw).trim() : 'n:' + nkey;
+        const bD = bgNovo[dayKey] || (bgNovo[dayKey] = {});
+        const b = bD[bgId] || (bD[bgId] = {n: String(nome).trim(), v: 0, f: 0, p: {}});
+        const gross = parseFloat(row[hidx['Gross']]) || 0;
         if(actionType === 'neworder'){
-          rec.daily[dayKey].vendas++;
-          rec.daily[dayKey].faturamento += parseFloat(row[hidx['Gross']]) || 0;
-          rec.produtos.add(produto);
-          const apD = apDia[dayKey] || (apDia[dayKey] = {}), apA = apD[nkey] || (apD[nkey] = {});
-          const apP = apA[produto] || (apA[produto] = [0, 0]);
-          if(isFrontal_(row, hidx)) apP[0]++;
-          apP[1] = Math.round((apP[1] + (parseFloat(row[hidx['Gross']]) || 0)) * 100) / 100;
+          b.v++;
+          b.f = Math.round((b.f + gross) * 100) / 100;
+          const bp = b.p[produto] || (b.p[produto] = [0, 0]);
+          if(isFrontal_(row, hidx)) bp[0]++;
+          bp[1] = Math.round((bp[1] + gross) * 100) / 100;
         } else if(actionType === 'refund'){
-          rec.daily[dayKey].faturamento -= parseFloat(row[hidx['Refund Amount']]) || 0;
+          b.f = Math.round((b.f - (parseFloat(row[hidx['Refund Amount']]) || 0)) * 100) / 100;
         } else if(actionType === 'chargeback'){
-          rec.daily[dayKey].faturamento -= parseFloat(row[hidx['Chargeback Amount']]) || 0;
+          b.f = Math.round((b.f - (parseFloat(row[hidx['Chargeback Amount']]) || 0)) * 100) / 100;
         }
       }
     });
@@ -2492,80 +2714,20 @@ async function processBuyGoodsImport(arquivos){
   }
 
   // zera os dias de relatório em todo mundo (pra não sobrar pedaço de import antigo nesse dia)
-  const afetados = new Set(), produtosZerados = new Set(), produtosValorZerados = new Set(), canaisZerados = new Set();
+  const produtosZerados = new Set(), produtosValorZerados = new Set(), canaisZerados = new Set();
   diasDonos.forEach(dia => {
     Object.keys(vendasPorProdutoDia).forEach(p => { if(dia in vendasPorProdutoDia[p]){ delete vendasPorProdutoDia[p][dia]; produtosZerados.add(p); } });
     Object.keys(vendasValorPorProdutoDia).forEach(p => { if(dia in vendasValorPorProdutoDia[p]){ delete vendasValorPorProdutoDia[p][dia]; produtosValorZerados.add(p); } });
     // Sales Bound não vem da BuyGoods (o dia a dia dela é lançado à mão do CRM) — não zera
     Object.keys(canaisPorDia).forEach(c => { if(c !== 'welcome_salesbound' && dia in canaisPorDia[c]){ delete canaisPorDia[c][dia]; canaisZerados.add(c); } });
-    Object.keys(revenueDaily).forEach(k => { if(dia in revenueDaily[k]){ delete revenueDaily[k][dia]; afetados.add(k); } });
-    Object.keys(importUpdates).forEach(k => { const dd = importUpdates[k].dados_diarios; if(dd && dia in dd){ delete dd[dia]; afetados.add(k); } });
   });
-
-  const existingKeys = new Set(DATA.map(e => normName(e.nome)));
-  // só atualiza quem está na carteira da Gaby — o resto do relatório é ignorado
-  const foraDaCarteira = Object.keys(byAff).filter(k => !existingKeys.has(k)).length;
-  const keys = Array.from(new Set(Object.keys(byAff).filter(k => existingKeys.has(k)).concat(Array.from(afetados))));
-  // ofertas por afiliado: cada dia do relatório é reescrito inteiro (mesma regra do resto)
+  // o relatório do dia inteiro (todos os afiliados) fica guardado — se a Gaby vincular alguém depois,
+  // o histórico dele aparece na hora, sem reimportar
   const diasAP = Array.from(new Set(Array.from(diasDonos).concat(Array.from(diasEncontrados)))).sort();
-  diasAP.forEach(d => { const novo = {}; Object.keys(apDia[d] || {}).forEach(k => { if(existingKeys.has(k)) novo[k] = apDia[d][k]; }); afiliadoProdutoDia[d] = novo; });
-  ofertasCache_ = null;
-  saveLS(LS_AFIL_PROD, afiliadoProdutoDia);
-  let updatedCount = 0, newCount = 0;
-
-  keys.forEach(key => {
-    const rec = byAff[key] || {nome: (importUpdates[key] && importUpdates[key].nome) || revenueNames[key] || key, produtos: new Set(), daily: {}};
-    const produtos = Array.from(rec.produtos);
-
-    let upd = importUpdates[key];
-    if(!upd){
-      upd = {
-        nome: rec.nome, volume_ago:null, volume_set:null, net_ago:null, net_set:null, tem_dado_custo:false,
-        ultima_venda:null, dias_sem_vender:null, tier:'sem_venda_2026',
-        confirmado:false, total_pedidos:0, volume_total:0, produtos:[], streak_diario:0, dados_diarios:{}
-      };
-    }
-    upd.ultima_venda = fmtDate_(upd.ultima_venda) || null; // sanitiza caso tenha vindo do Sheets como timestamp
-    if(!upd.dados_diarios) upd.dados_diarios = {};
-    if(!revenueDaily[key]) revenueDaily[key] = {};
-
-    Object.keys(rec.daily).forEach(dayKey => {
-      const d = rec.daily[dayKey];
-      const faturamento = Math.round(d.faturamento*100)/100;
-      upd.dados_diarios[dayKey] = {orders: d.vendas, volume: faturamento};
-      revenueDaily[key][dayKey] = {vendas: d.vendas, faturamento, produtos};
-    });
-    if(byAff[key]) revenueNames[key] = rec.nome;
-
-    // última venda: o dia mais recente com pedido; se a anterior caiu num dia refeito agora e sem pedido, recalcula
-    const diasComVenda = Object.keys(upd.dados_diarios).filter(d => (upd.dados_diarios[d].orders||0) > 0).sort();
-    const maxDados = diasComVenda.length ? diasComVenda[diasComVenda.length-1] : null;
-    if(upd.ultima_venda && diasDonos.has(upd.ultima_venda) && !((upd.dados_diarios[upd.ultima_venda]||{}).orders > 0)){
-      const base = BASE_DATA.find(e => normName(e.nome) === key);
-      upd.ultima_venda = maxDados || (base && fmtDate_(base.ultima_venda)) || null;
-    }
-    if(maxDados && (!upd.ultima_venda || maxDados > upd.ultima_venda)) upd.ultima_venda = maxDados;
-
-    // totais sempre recalculados a partir do histórico completo acumulado (idempotente — reimportar não duplica)
-    let totalPedidos = 0, volumeTotal = 0;
-    Object.values(upd.dados_diarios).forEach(d => { totalPedidos += d.orders||0; volumeTotal += d.volume||0; });
-    upd.total_pedidos = totalPedidos;
-    upd.volume_total = Math.round(volumeTotal*100)/100;
-    upd.confirmado = totalPedidos > 0;
-
-    const prodSet = new Set(upd.produtos||[]);
-    produtos.forEach(p => prodSet.add(p));
-    upd.produtos = Array.from(prodSet);
-    const {dias, tier} = recalcTierFromLastSale_(upd.ultima_venda);
-    upd.dias_sem_vender = dias;
-    upd.tier = tier;
-    upd.streak_diario = streakDiario_(upd.dados_diarios, upd.ultima_venda ? new Date(upd.ultima_venda) : null);
-    upd.nome = upd.nome || rec.nome;
-    importUpdates[key] = upd;
-
-    if(byAff[key]){ if(existingKeys.has(key)) updatedCount++; else newCount++; }
-  });
-
+  diasAP.forEach(d => { bgDia[d] = bgNovo[d] || {}; });
+  saveLS(LS_BG_DIA, bgDia);
+  const {keys, updatedCount, foraDaCarteira, afetados} = reaplicarCarteira_(diasAP);
+  const newCount = 0;
   saveLS(LS_UPDATES, importUpdates);
   saveLS(LS_REVENUE, revenueDaily);
   saveLS(LS_REVENUE_NAMES, revenueNames);
@@ -2605,23 +2767,18 @@ async function processBuyGoodsImport(arquivos){
   renderImportInfo();
   renderVendasDia();
   renderPorOferta_();
-  showToast(`Importado (${periodoTxt}): ${updatedCount} atualizados, ${foraDaCarteira} fora da carteira (ignorados)` + (APPS_SCRIPT_URL ? ' — sincronizando...' : ' (salvo neste navegador)'));
+  renderBgSugestoes_();
+  showToast(`Importado (${periodoTxt}): ${updatedCount} atualizados, ${foraDaCarteira} fora da carteira` + (APPS_SCRIPT_URL ? ' — sincronizando...' : ' (salvo neste navegador)'));
 
   if(APPS_SCRIPT_URL){
-    const importBatch = keys.map(key => {
-      const rec = Object.assign({}, importUpdates[key]);
-      rec.dados_diarios = JSON.stringify(rec.dados_diarios || {});
-      return rec;
-    });
-    const revenueBatch = keys.map(key => ({nome: revenueNames[key] || importUpdates[key].nome || key, dados_json: JSON.stringify(revenueDaily[key] || {})}));
     const vendasProdutoBatch = produtosTocados.map(produto => ({produto, dados_json: JSON.stringify(vendasPorProdutoDia[produto])}));
     const vendasValorBatch = produtosValorTocados.map(produto => ({produto, dados_json: JSON.stringify(vendasValorPorProdutoDia[produto])}));
     const canaisBatch = canaisTocados.map(canal => ({canal, dados_json: JSON.stringify(canaisPorDia[canal])}));
     const oks = await Promise.all([
-      postEmLotes_('importBatch', importBatch), postEmLotes_('importRevenueBatch', revenueBatch),
+      sincronizarCarteira_(keys, diasAP),
       postEmLotes_('importVendasProdutoBatch', vendasProdutoBatch), postEmLotes_('importVendasValorBatch', vendasValorBatch),
       postEmLotes_('importCanaisBatch', canaisBatch),
-      postEmLotes_('importAfiliadoProdutoBatch', diasAP.map(d => ({id: 'ap_' + d, dados_json: JSON.stringify(afiliadoProdutoDia[d] || {})})), 10)
+      postEmLotes_('importBuyGoodsDiaBatch', diasAP.map(d => ({id: 'bg_' + d, dados_json: JSON.stringify(bgDia[d] || {})})), 5)
     ]);
     if(oks.every(Boolean)){ syncStatus='ok'; showToast(`Sincronizado: ${keys.length} afiliados no Google Sheets ✓`); }
     else { syncStatus='erro'; showToast('Import salvo localmente, mas não sincronizou com o Sheets ainda'); }
